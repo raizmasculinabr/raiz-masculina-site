@@ -44,6 +44,10 @@
                     <input type="text" id="title" required>
                 </div>
                 <div class="input-group">
+                    <label for="category">Categoria</label>
+                    <input type="text" id="category" placeholder="Ex: Acessórios, Ferramentas, Eletrônicos">
+                </div>
+                <div class="input-group">
                     <label for="description">Descrição</label>
                     <textarea id="description" rows="3"></textarea>
                 </div>
@@ -69,14 +73,13 @@
     <script>
         // --- CONFIGURAÇÃO DO SUPABASE ---
         const SUPABASE_URL = 'https://obsyewvdfodliuzrmwlk.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ic3lld3ZkZm9kbGl1enJtd2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY5MDYsImV4cCI6MjA3MzYxMjkwNn0.gERdLzMG0uVMf18-tcZtKe45UzSAdmqGg_YwjkeSCxE'; // Lembre-se de usar sua chave correta!
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ic3lld3ZkZm9kbGl1enJtd2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY5MDYsImV4cCI6MjA3MzYxMjkwNn0.gERdLzMG0uVMf18-tcZtKe45UzSAdmqGg_YwjkeSCxE';
 
         const { createClient } = supabase;
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // --- LÓGICA DO PAINEL ---
         document.addEventListener('DOMContentLoaded', () => {
-            // ... (outras variáveis continuam aqui) ...
             const logoutButton = document.getElementById('logout-button');
             const productForm = document.getElementById('product-form');
             const productsList = document.getElementById('products-list');
@@ -100,97 +103,88 @@
             });
 
             // 3. LÓGICA PARA BUSCAR E EXIBIR OS PRODUTOS
-        async function fetchProducts() {
-            const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
-            if (error) { console.error('Erro ao buscar produtos:', error); return; }
+            async function fetchProducts() {
+                const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
+                if (error) { console.error('Erro ao buscar produtos:', error); return; }
 
-            productsList.innerHTML = '';
-            data.forEach(product => {
-                const productElement = document.createElement('div');
-                productElement.classList.add('product-item');
-                if (product.is_featured) { productElement.classList.add('featured'); }
-                // Usa a primeira imagem da lista como miniatura
-                const thumbnailUrl = (product.image_urls && product.image_urls.length > 0) ? product.image_urls[0] : 'https://via.placeholder.com/80';
-                productElement.innerHTML = `
-                    <img src="${thumbnailUrl}" alt="${product.title}">
-                    <div class="product-item-info">
-                        <h4>${product.title} ${product.is_featured ? '⭐' : ''}</h4>
-                        <p>${product.description ? product.description.substring(0, 50) : ''}...</p>
-                    </div>
-                    <div class="product-item-actions">
-                        <button class="feature-btn" data-id="${product.id}" data-featured="${product.is_featured}">${product.is_featured ? 'Remover Destaque' : 'Tornar Destaque'}</button>
-                        <button class="edit-btn" data-id="${product.id}">Editar</button>
-                        <button class="delete-btn" data-id="${product.id}">Excluir</button>
-                    </div>
-                `;
-                productsList.appendChild(productElement);
+                productsList.innerHTML = '';
+                data.forEach(product => {
+                    const productElement = document.createElement('div');
+                    productElement.classList.add('product-item');
+                    if (product.is_featured) { productElement.classList.add('featured'); }
+                    const thumbnailUrl = (product.image_urls && product.image_urls.length > 0) ? product.image_urls[0] : 'https://via.placeholder.com/80';
+                    productElement.innerHTML = `
+                        <img src="${thumbnailUrl}" alt="${product.title}">
+                        <div class="product-item-info">
+                            <h4>${product.title} ${product.is_featured ? '⭐' : ''}</h4>
+                            <p>${product.description ? product.description.substring(0, 50) : ''}...</p>
+                        </div>
+                        <div class="product-item-actions">
+                            <button class="feature-btn" data-id="${product.id}" data-featured="${product.is_featured}">${product.is_featured ? 'Remover Destaque' : 'Tornar Destaque'}</button>
+                            <button class="edit-btn" data-id="${product.id}">Editar</button>
+                            <button class="delete-btn" data-id="${product.id}">Excluir</button>
+                        </div>
+                    `;
+                    productsList.appendChild(productElement);
+                });
+            }
+            
+            // 4. LÓGICA PARA ADICIONAR/ATUALIZAR PRODUTO
+            productForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const title = document.getElementById('title').value;
+                const categoryInput = document.getElementById('category').value;
+                const description = document.getElementById('description').value;
+                const shopeeLink = document.getElementById('shopee-link').value;
+                const imageFiles = document.getElementById('image').files;
+                
+                formMessage.textContent = 'Enviando...';
+
+                // --- LINHA DA CORREÇÃO ADICIONADA AQUI ---
+                // Converte o texto "Relógios, Moda" em uma lista ["Relógios", "Moda"]
+                const categories = categoryInput.split(',').map(cat => cat.trim()).filter(Boolean);
+
+                let imageUrls = [];
+                if (imageFiles.length > 0) {
+                    for (const file of imageFiles) {
+                        const fileName = `${Date.now()}-${file.name}`;
+                        const { error: uploadError } = await supabaseClient.storage.from('fotos-produtos').upload(fileName, file);
+                        if (uploadError) { formMessage.textContent = `Erro no upload: ${file.name}`; return; }
+                        const { data: urlData } = supabaseClient.storage.from('fotos-produtos').getPublicUrl(fileName);
+                        imageUrls.push(urlData.publicUrl);
+                    }
+                }
+
+                const productData = { title, category: categories, description, shopee_link: shopeeLink };
+
+                if (editingProductId) {
+                    if (imageUrls.length > 0) { productData.image_urls = imageUrls; }
+                    const { error } = await supabaseClient.from('products').update(productData).eq('id', editingProductId);
+                    if (error) { formMessage.textContent = 'Erro ao atualizar produto.'; console.error(error); } else { formMessage.textContent = 'Produto atualizado!'; resetForm(); }
+                } else {
+                    if (imageUrls.length === 0) { formMessage.textContent = 'Pelo menos uma imagem é obrigatória.'; return; }
+                    productData.image_urls = imageUrls;
+                    const { error } = await supabaseClient.from('products').insert([productData]);
+                    if (error) { formMessage.textContent = 'Erro ao salvar produto.'; console.error(error); } else { formMessage.textContent = 'Produto salvo!'; }
+                }
+                
+                productForm.reset();
+                fetchProducts();
+                setTimeout(() => formMessage.textContent = '', 3000);
             });
-        }
-        
-        // 4. LÓGICA ATUALIZADA PARA ADICIONAR/ATUALIZAR PRODUTO COM MÚLTIPLAS IMAGENS
-        productForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const title = document.getElementById('title').value;
-            const description = document.getElementById('description').value;
-            const shopeeLink = document.getElementById('shopee-link').value;
-            const imageFiles = document.getElementById('image').files; // Pega TODOS os arquivos
-            
-            formMessage.textContent = 'Enviando...';
-            
-            let imageUrls = []; // Irá guardar a lista de URLs
 
-            if (imageFiles.length > 0) {
-                // Faz um loop para fazer upload de CADA imagem
-                for (const file of imageFiles) {
-                    const fileName = `${Date.now()}-${file.name}`;
-                    const { error: uploadError } = await supabaseClient.storage.from('fotos-produtos').upload(fileName, file);
-                    if (uploadError) { formMessage.textContent = `Erro no upload do arquivo: ${file.name}`; console.error(uploadError); return; }
-                    
-                    const { data: urlData } = supabaseClient.storage.from('fotos-produtos').getPublicUrl(fileName);
-                    imageUrls.push(urlData.publicUrl); // Adiciona a URL à nossa lista
-                }
-            }
-
-            if (editingProductId) {
-                // ATUALIZAR
-                const productToUpdate = { title, description, shopee_link: shopeeLink };
-                // Se novas imagens foram enviadas, substitui a lista antiga
-                if (imageUrls.length > 0) {
-                    productToUpdate.image_urls = imageUrls;
-                }
-                const { error } = await supabaseClient.from('products').update(productToUpdate).eq('id', editingProductId);
-                if (error) { formMessage.textContent = 'Erro ao atualizar produto.'; } else { formMessage.textContent = 'Produto atualizado!'; resetForm(); }
-            } else {
-                // CRIAR
-                if (imageUrls.length === 0) { formMessage.textContent = 'Pelo menos uma imagem é obrigatória.'; return; }
-                const { error } = await supabaseClient.from('products').insert([{ title, description, shopee_link: shopeeLink, image_urls: imageUrls }]);
-                if (error) { formMessage.textContent = 'Erro ao salvar produto.'; } else { formMessage.textContent = 'Produto salvo!'; }
-            }
-            
-            productForm.reset();
-            fetchProducts();
-            setTimeout(() => formMessage.textContent = '', 3000);
-        });
-
-            // 5. LÓGICA DOS BOTÕES DE AÇÃO (EDITAR, EXCLUIR E DESTAQUE)
+            // 5. LÓGICA DOS BOTÕES DE AÇÃO
             productsList.addEventListener('click', async (event) => {
                 const target = event.target;
                 const productId = target.dataset.id;
                 if (!productId) return;
 
-                // --- NOVA LÓGICA PARA O BOTÃO DE DESTAQUE ---
                 if (target.classList.contains('feature-btn')) {
                     const isCurrentlyFeatured = target.dataset.featured === 'true';
-                    const { error } = await supabaseClient
-                        .from('products')
-                        .update({ is_featured: !isCurrentlyFeatured }) // Inverte o valor atual
-                        .eq('id', productId);
-                    
-                    if (error) { alert('Erro ao alterar o status de destaque.'); }
-                    else { fetchProducts(); } // Atualiza a lista para refletir a mudança
+                    const { error } = await supabaseClient.from('products').update({ is_featured: !isCurrentlyFeatured }).eq('id', productId);
+                    if (error) { alert('Erro ao alterar o status de destaque.'); } else { fetchProducts(); }
                 }
 
-                // Ação de Excluir (continua a mesma)
                 if (target.classList.contains('delete-btn')) {
                     if (confirm('Tem certeza que deseja excluir este produto?')) {
                         const { error } = await supabaseClient.from('products').delete().eq('id', productId);
@@ -198,11 +192,11 @@
                     }
                 }
 
-                // Ação de Editar (continua a mesma)
                 if (target.classList.contains('edit-btn')) {
                     const { data, error } = await supabaseClient.from('products').select('*').eq('id', productId).single();
                     if (error) { alert('Erro ao buscar dados do produto.'); return; }
                     document.getElementById('title').value = data.title;
+                    document.getElementById('category').value = data.category ? data.category.join(', ') : '';
                     document.getElementById('description').value = data.description;
                     document.getElementById('shopee-link').value = data.shopee_link;
                     document.getElementById('image').required = false;

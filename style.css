@@ -342,3 +342,43 @@ footer {
 .product-card .next {
     right: 10px;
 }
+/* ---- Estilos da Página de Contato ---- */
+.contato-subtitulo {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 50px;
+}
+
+.contato-links {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap; /* Garante que os itens quebrem a linha em telas menores */
+}
+
+.contato-item {
+    background-color: var(--white-color);
+    padding: 25px 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    text-decoration: none;
+    color: var(--dark-grey);
+    font-size: 1.1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.contato-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    color: var(--primary-color);
+}
+
+.contato-item i {
+    font-size: 2rem; /* Tamanho do ícone */
+    color: var(--primary-color);
+}
