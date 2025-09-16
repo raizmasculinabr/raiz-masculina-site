@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle - Raiz Masculina</title>
+    <link rel="stylesheet" href="painel.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* Estilos adicionais específicos para o painel */
+        body { display: block; }
+        .panel-container { max-width: 900px; margin: 40px auto; padding: 20px; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--light-grey); padding-bottom: 10px; }
+        #logout-button { width: auto; padding: 10px 20px; background-color: var(--error-color); }
+        .form-container, .products-list-container { background-color: var(--white-color); padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); margin-top: 30px; }
+        .product-item { display: flex; align-items: center; gap: 20px; padding: 15px; border-bottom: 1px solid var(--light-grey); }
+        .product-item img { width: 80px; height: 80px; object-fit: cover; border-radius: 5px; }
+        .product-item-info { flex-grow: 1; }
+        .product-item-info h4 { margin: 0 0 5px 0; }
+        .product-item-actions button { width: auto; font-size: 0.8rem; padding: 5px 10px; margin-left: 10px; }
+        button.edit-btn { background-color: #3498db; }
+        button.delete-btn { background-color: #c0392b; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="panel-container">
+        <div class="panel-header">
+            <h2>Gerenciar Produtos</h2>
+            <button id="logout-button">Sair</button>
+        </div>
+
+        <div class="form-container">
+            <h3>Adicionar Novo Produto</h3>
+            <form id="product-form">
+                <div class="input-group">
+                    <label for="title">Título do Produto</label>
+                    <input type="text" id="title" required>
+                </div>
+                <div class="input-group">
+                    <label for="description">Descrição</label>
+                    <textarea id="description" rows="3"></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="shopee-link">Link da Shopee</label>
+                    <input type="url" id="shopee-link" placeholder="https://...">
+                </div>
+                <div class="input-group">
+                    <label for="image">Imagem do Produto</label>
+<input type="file" id="image" accept="image/*" required multiple>                </div>
+                <button type="submit">Salvar Produto</button>
+                <div id="form-message" style="margin-top: 15px;"></div>
+            </form>
+        </div>
+
+        <div class="products-list-container">
+            <h3>Produtos Cadastrados</h3>
+            <div id="products-list">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURAÇÃO DO SUPABASE ---
+        const SUPABASE_URL = 'https://obsyewvdfodliuzrmwlk.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ic3lld3ZkZm9kbGl1enJtd2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY5MDYsImV4cCI6MjA3MzYxMjkwNn0.gERdLzMG0uVMf18-tcZtKe45UzSAdmqGg_YwjkeSCxE'; // Lembre-se de usar sua chave correta!
+
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- LÓGICA DO PAINEL ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // ... (outras variáveis continuam aqui) ...
+            const logoutButton = document.getElementById('logout-button');
+            const productForm = document.getElementById('product-form');
+            const productsList = document.getElementById('products-list');
+            const formMessage = document.getElementById('form-message');
+            const formTitle = document.querySelector('.form-container h3');
+            const submitButton = productForm.querySelector('button[type="submit"]');
+            let editingProductId = null;
+
+            // 1. GUARDA DE AUTENTICAÇÃO
+            supabaseClient.auth.onAuthStateChange((_event, session) => {
+                if (!session) {
+                    window.location.href = 'login.html';
+                } else {
+                    fetchProducts();
+                }
+            });
+
+            // 2. LÓGICA DE LOGOUT
+            logoutButton.addEventListener('click', async () => {
+                await supabaseClient.auth.signOut();
+            });
+
+            // 3. LÓGICA PARA BUSCAR E EXIBIR OS PRODUTOS
+        async function fetchProducts() {
+            const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
+            if (error) { console.error('Erro ao buscar produtos:', error); return; }
+
+            productsList.innerHTML = '';
+            data.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.classList.add('product-item');
+                if (product.is_featured) { productElement.classList.add('featured'); }
+                // Usa a primeira imagem da lista como miniatura
+                const thumbnailUrl = (product.image_urls && product.image_urls.length > 0) ? product.image_urls[0] : 'https://via.placeholder.com/80';
+                productElement.innerHTML = `
+                    <img src="${thumbnailUrl}" alt="${product.title}">
+                    <div class="product-item-info">
+                        <h4>${product.title} ${product.is_featured ? '⭐' : ''}</h4>
+                        <p>${product.description ? product.description.substring(0, 50) : ''}...</p>
+                    </div>
+                    <div class="product-item-actions">
+                        <button class="feature-btn" data-id="${product.id}" data-featured="${product.is_featured}">${product.is_featured ? 'Remover Destaque' : 'Tornar Destaque'}</button>
+                        <button class="edit-btn" data-id="${product.id}">Editar</button>
+                        <button class="delete-btn" data-id="${product.id}">Excluir</button>
+                    </div>
+                `;
+                productsList.appendChild(productElement);
+            });
+        }
+        
+        // 4. LÓGICA ATUALIZADA PARA ADICIONAR/ATUALIZAR PRODUTO COM MÚLTIPLAS IMAGENS
+        productForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const shopeeLink = document.getElementById('shopee-link').value;
+            const imageFiles = document.getElementById('image').files; // Pega TODOS os arquivos
+            
+            formMessage.textContent = 'Enviando...';
+            
+            let imageUrls = []; // Irá guardar a lista de URLs
+
+            if (imageFiles.length > 0) {
+                // Faz um loop para fazer upload de CADA imagem
+                for (const file of imageFiles) {
+                    const fileName = `${Date.now()}-${file.name}`;
+                    const { error: uploadError } = await supabaseClient.storage.from('fotos-produtos').upload(fileName, file);
+                    if (uploadError) { formMessage.textContent = `Erro no upload do arquivo: ${file.name}`; console.error(uploadError); return; }
+                    
+                    const { data: urlData } = supabaseClient.storage.from('fotos-produtos').getPublicUrl(fileName);
+                    imageUrls.push(urlData.publicUrl); // Adiciona a URL à nossa lista
+                }
+            }
+
+            if (editingProductId) {
+                // ATUALIZAR
+                const productToUpdate = { title, description, shopee_link: shopeeLink };
+                // Se novas imagens foram enviadas, substitui a lista antiga
+                if (imageUrls.length > 0) {
+                    productToUpdate.image_urls = imageUrls;
+                }
+                const { error } = await supabaseClient.from('products').update(productToUpdate).eq('id', editingProductId);
+                if (error) { formMessage.textContent = 'Erro ao atualizar produto.'; } else { formMessage.textContent = 'Produto atualizado!'; resetForm(); }
+            } else {
+                // CRIAR
+                if (imageUrls.length === 0) { formMessage.textContent = 'Pelo menos uma imagem é obrigatória.'; return; }
+                const { error } = await supabaseClient.from('products').insert([{ title, description, shopee_link: shopeeLink, image_urls: imageUrls }]);
+                if (error) { formMessage.textContent = 'Erro ao salvar produto.'; } else { formMessage.textContent = 'Produto salvo!'; }
+            }
+            
+            productForm.reset();
+            fetchProducts();
+            setTimeout(() => formMessage.textContent = '', 3000);
+        });
+
+            // 5. LÓGICA DOS BOTÕES DE AÇÃO (EDITAR, EXCLUIR E DESTAQUE)
+            productsList.addEventListener('click', async (event) => {
+                const target = event.target;
+                const productId = target.dataset.id;
+                if (!productId) return;
+
+                // --- NOVA LÓGICA PARA O BOTÃO DE DESTAQUE ---
+                if (target.classList.contains('feature-btn')) {
+                    const isCurrentlyFeatured = target.dataset.featured === 'true';
+                    const { error } = await supabaseClient
+                        .from('products')
+                        .update({ is_featured: !isCurrentlyFeatured }) // Inverte o valor atual
+                        .eq('id', productId);
+                    
+                    if (error) { alert('Erro ao alterar o status de destaque.'); }
+                    else { fetchProducts(); } // Atualiza a lista para refletir a mudança
+                }
+
+                // Ação de Excluir (continua a mesma)
+                if (target.classList.contains('delete-btn')) {
+                    if (confirm('Tem certeza que deseja excluir este produto?')) {
+                        const { error } = await supabaseClient.from('products').delete().eq('id', productId);
+                        if (error) { alert('Erro ao excluir o produto.'); } else { fetchProducts(); }
+                    }
+                }
+
+                // Ação de Editar (continua a mesma)
+                if (target.classList.contains('edit-btn')) {
+                    const { data, error } = await supabaseClient.from('products').select('*').eq('id', productId).single();
+                    if (error) { alert('Erro ao buscar dados do produto.'); return; }
+                    document.getElementById('title').value = data.title;
+                    document.getElementById('description').value = data.description;
+                    document.getElementById('shopee-link').value = data.shopee_link;
+                    document.getElementById('image').required = false;
+                    formTitle.textContent = 'Editar Produto';
+                    submitButton.textContent = 'Atualizar Produto';
+                    editingProductId = data.id;
+                    window.scrollTo(0, 0);
+                }
+            });
+            
+            function resetForm() {
+                productForm.reset();
+                formTitle.textContent = 'Adicionar Novo Produto';
+                submitButton.textContent = 'Salvar Produto';
+                document.getElementById('image').required = true;
+                editingProductId = null;
+            }
+        });
+    </script>
+</body>
+</html>

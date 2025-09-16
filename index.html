@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raiz Masculina - Home</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.jpeg" alt="Logo Raiz Masculina" class="logo-img">
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">HOME</a></li>
+                    <li><a href="produtos.html">PRODUTOS</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero" id="hero-section">
+            <div class="container">
+                <h1 id="typing-text"></h1> 
+            </div>
+            <div class="hero-overlay"></div> 
+        </section>
+
+         <section id="quem-somos" class="section">
+            <div class="container">
+                <h2>QUEM SOMOS</h2>
+                <div class="quem-somos-content">
+                    <div class="quem-somos-image">
+                        <img src="images/image-quemsomos.png" alt="Acessórios, ferramentas e eletrônicos masculinos">
+                    </div>
+                    <div class="quem-somos-text">
+                        <p>
+                            Acreditamos que o universo masculino é vasto e multifacetado. Por isso, a <strong>Raiz Masculina</strong> vai além da moda. Mergulhamos na essência do que todo homem valoriza: a funcionalidade que resolve, a tecnologia que inova e o estilo que marca presença.
+                        </p>
+                        <p>
+                            Somos mais do que uma loja; somos uma curadoria completa para o homem contemporâneo. Desde acessórios e vestuário que definem sua identidade, até eletrônicos de ponta e ferramentas robustas para seus projetos e hobbies. Nossa missão é ser o seu ponto de referência, o lugar onde você encontra não apenas o que precisa, mas aquilo que te representa. Seja para se presentear ou para encontrar o presente perfeito, aqui você encontra a raiz de toda grande escolha.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="destaques" class="section section-dark">
+            <div class="container">
+                <h2>PRODUTOS EM DESTAQUE</h2>
+<div class="product-grid" id="destaques-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px;"></div>            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Raiz Masculina. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- CONFIGURAÇÃO DO SUPABASE ---
+        const SUPABASE_URL = 'https://obsyewvdfodliuzrmwlk.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ic3lld3ZkZm9kbGl1enJtd2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY5MDYsImV4cCI6MjA3MzYxMjkwNn0.gERdLzMG0uVMf18-tcZtKe45UzSAdmqGg_YwjkeSCxE';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- LÓGICA DO TEXTO DIGITADO ---
+        const typingTextElement = document.getElementById('typing-text');
+        const heroSection = document.getElementById('hero-section');
+        const phrases = [
+            "Estilo que firma. Identidade que cresce.",
+            "Confira agora nossas ofertas enraizadas ao seu gosto.",
+            "Tudo que um homem precisa, em um só lugar."
+        ];
+        const backgroundImageURL = 'https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=1740&q=80';
+        const typingSpeed = 75, erasingSpeed = 50, pauseBetweenPhrases = 2000;
+        let phraseIndex = 0, charIndex = 0, isTyping = true;
+
+        function typeEraseLoop() {
+            const currentPhrase = phrases[phraseIndex];
+            if (isTyping) {
+                if (charIndex < currentPhrase.length) {
+                    typingTextElement.textContent += currentPhrase.charAt(charIndex); charIndex++;
+                    setTimeout(typeEraseLoop, typingSpeed);
+                } else {
+                    isTyping = false; setTimeout(typeEraseLoop, pauseBetweenPhrases);
+                }
+            } else {
+                if (charIndex > 0) {
+                    typingTextElement.textContent = currentPhrase.substring(0, charIndex - 1); charIndex--;
+                    setTimeout(typeEraseLoop, erasingSpeed);
+                } else {
+                    isTyping = true; phraseIndex = (phraseIndex + 1) % phrases.length;
+                    setTimeout(typeEraseLoop, 500);
+                }
+            }
+        }
+        
+        // --- LÓGICA PARA CARREGAR PRODUTOS EM DESTAQUE DO SUPABASE ---
+        async function loadFeaturedProducts() {
+            const grid = document.getElementById('destaques-grid');
+            grid.innerHTML = '<p>Carregando destaques...</p>';
+
+            const { data, error } = await supabaseClient
+                .from('products')
+                .select('*')
+                .eq('is_featured', true) // Busca apenas produtos marcados como destaque
+                .limit(3);               // Limita a 3 produtos
+
+            if (error) {
+                console.error('Erro ao carregar produtos em destaque:', error);
+                grid.innerHTML = '<p>Não foi possível carregar os destaques no momento.</p>';
+                return;
+            }
+            
+            grid.innerHTML = ''; // Limpa a mensagem de carregamento
+            if (data.length === 0) {
+                grid.innerHTML = '<p>Nenhum produto em destaque no momento.</p>';
+                return;
+            }
+
+            data.forEach(product => {
+                // --- CORREÇÃO APLICADA AQUI ---
+                // Pegamos a primeira imagem da lista 'image_urls' (plural)
+                const imageUrl = (product.image_urls && product.image_urls.length > 0) 
+                                ? product.image_urls[0] 
+                                : ''; // Usa um valor vazio se não houver imagem
+
+                grid.innerHTML += `
+                    <div class="product-card">
+                        <img src="${imageUrl}" alt="${product.title}">
+                        <h3>${product.title}</h3>
+                        <p>${product.description ? product.description.substring(0, 80) : ''}...</p>
+                        <a href="${product.shopee_link}" target="_blank" class="btn-secondary">Ver Detalhes</a>
+                    </div>
+                `;
+            });
+        }
+
+        // --- INICIA TUDO QUANDO A PÁGINA CARREGA ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Define a imagem de fundo do hero
+            heroSection.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('${backgroundImageURL}')`;
+            // Inicia o efeito de digitação
+            typeEraseLoop();
+            // Inicia o carregamento dos produtos em destaque
+            loadFeaturedProducts();
+        });
+    </script>
+</body>
+</html>

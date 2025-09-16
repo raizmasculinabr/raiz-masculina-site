@@ -1,0 +1,80 @@
+/* Arquivo: painel.css */
+:root {
+    --primary-color: #2F4F4F;
+    --light-grey: #f4f4f4;
+    --dark-grey: #333;
+    --white-color: #ffffff;
+    --error-color: #e74c3c;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--light-grey);
+    color: var(--dark-grey);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.login-container {
+    background-color: var(--white-color);
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+h2 {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--primary-color);
+    margin-bottom: 30px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Garante que o padding não afete a largura final */
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #1a3a3a;
+}
+
+#error-message {
+    color: var(--error-color);
+    margin-top: 15px;
+    font-weight: 500;
+    min-height: 20px;
+}
+button.feature-btn { background-color: #f39c12; }

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raiz Masculina - Produtos</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.jpeg" alt="Logo Raiz Masculina" class="logo-img">
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="index.html">HOME</a></li>
+                    <li><a href="produtos.html" class="active">PRODUTOS</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section id="nossa-colecao" class="section">
+            <div class="container">
+                <h2>CONFIRA NOSSOS PRODUTOS</h2>
+                <div class="product-grid" id="produtos-grid"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Raiz Masculina. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- CONFIGURAÇÃO DO SUPABASE --- (continua a mesma)
+        const SUPABASE_URL = 'https://obsyewvdfodliuzrmwlk.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ic3lld3ZkZm9kbGl1enJtd2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY5MDYsImV4cCI6MjA3MzYxMjkwNn0.gERdLzMG0uVMf18-tcZtKe45UzSAdmqGg_YwjkeSCxE';        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function loadAllProducts() {
+            const grid = document.getElementById('produtos-grid');
+            grid.innerHTML = '<p>Carregando produtos...</p>';
+
+            const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
+            if (error) { grid.innerHTML = '<p>Não foi possível carregar os produtos.</p>'; return; }
+            
+            grid.innerHTML = '';
+            if (data.length === 0) { grid.innerHTML = '<p>Nenhum produto cadastrado.</p>'; return; }
+
+            data.forEach(product => {
+                // --- HTML DO CARROSSEL ---
+                let imagesHTML = '';
+                if (product.image_urls && product.image_urls.length > 0) {
+                    product.image_urls.forEach((url, index) => {
+                        imagesHTML += `<img src="${url}" alt="${product.title} - imagem ${index + 1}" class="carousel-image ${index === 0 ? 'active' : ''}">`;
+                    });
+                }
+
+                // Cria o card do produto com a estrutura do carrossel
+                grid.innerHTML += `
+                    <div class="product-card" data-total-slides="${product.image_urls.length}">
+                        <div class="image-container">
+                            ${imagesHTML}
+                            ${product.image_urls.length > 1 ? '<button class="carousel-btn prev">&lt;</button><button class="carousel-btn next">&gt;</button>' : ''}
+                        </div>
+                        <h3>${product.title}</h3>
+                        <p>${product.description ? product.description.substring(0, 80) : ''}...</p>
+                        <a href="${product.shopee_link}" target="_blank" class="btn-secondary">Ver na Shopee</a>
+                    </div>
+                `;
+            });
+        }
+
+        // --- LÓGICA DO CARROSSEL ---
+        document.addEventListener('click', function(event) {
+            if (event.target.matches('.carousel-btn')) {
+                const button = event.target;
+                const card = button.closest('.product-card');
+                const images = card.querySelectorAll('.carousel-image');
+                let currentIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
+                
+                images[currentIndex].classList.remove('active');
+
+                if (button.classList.contains('next')) {
+                    currentIndex = (currentIndex + 1) % images.length;
+                } else if (button.classList.contains('prev')) {
+                    currentIndex = (currentIndex - 1 + images.length) % images.length;
+                }
+                
+                images[currentIndex].classList.add('active');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAllProducts();
+        });
+    </script>
+
+</body>
+</html>
