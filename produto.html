@@ -86,27 +86,17 @@
         const content = document.getElementById('product-detail-content');
         const relatedGrid = document.getElementById('related-products-grid');
 
-        // Função para buscar e exibir produtos relacionados
+        // Função para buscar e exibir produtos relacionados (continua a mesma)
         async function loadRelatedProducts(categories, currentProductId) {
             if (!categories || categories.length === 0) {
                 document.getElementById('produtos-relacionados').style.display = 'none';
                 return;
             }
-
-            // Busca produtos que contenham QUALQUER uma das categorias do produto principal
-            const { data, error } = await supabaseClient
-                .from('products')
-                .select('*')
-                .contains('category', categories) // Magia acontece aqui: busca por itens na lista
-                .neq('id', currentProductId) // Garante que o produto principal não apareça
-                .limit(3); // Mostra no máximo 3 produtos relacionados
-
+            const { data, error } = await supabaseClient.from('products').select('*').contains('category', categories).neq('id', currentProductId).limit(3);
             if (error || !data || data.length === 0) {
-                document.getElementById('produtos-relacionados').style.display = 'none'; // Esconde a seção se não houver relacionados
-                console.error("Erro ou nenhum relacionado encontrado:", error);
+                document.getElementById('produtos-relacionados').style.display = 'none';
                 return;
             }
-
             relatedGrid.innerHTML = '';
             data.forEach(product => {
                 const imageUrl = (product.image_urls && product.image_urls.length > 0) ? product.image_urls[0] : '';
@@ -123,23 +113,14 @@
             });
         }
 
-        // Função principal que carrega o produto da URL
+        // Função principal que carrega o produto da URL (continua a mesma)
         async function loadProductDetails() {
             const params = new URLSearchParams(window.location.search);
             const productId = params.get('id');
-
-            if (!productId) {
-                content.innerHTML = '<p>Produto não encontrado. Volte para a <a href="produtos.html">lista de produtos</a>.</p>';
-                return;
-            }
+            if (!productId) { content.innerHTML = '<p>Produto não encontrado.</p>'; return; }
 
             const { data: product, error } = await supabaseClient.from('products').select('*').eq('id', productId).single();
-
-            if (error || !product) {
-                console.error('Erro ao buscar produto:', error);
-                content.innerHTML = '<p>Produto não encontrado. Volte para a <a href="produtos.html">lista de produtos</a>.</p>';
-                return;
-            }
+            if (error || !product) { content.innerHTML = '<p>Produto não encontrado.</p>'; return; }
 
             document.title = `${product.title} - Raiz Masculina`;
 
@@ -149,7 +130,6 @@
                     imagesHTML += `<img src="${url}" alt="${product.title} - imagem ${index + 1}" class="carousel-image ${index === 0 ? 'active' : ''}">`;
                 });
             }
-
             content.innerHTML = `
                 <div class="detail-image-carousel">
                     <div class="image-container">
@@ -165,12 +145,12 @@
                 </div>
             `;
             
-            // Após carregar o produto principal, busca os relacionados
             loadRelatedProducts(product.category, product.id);
         }
 
-        // Função global de clique para o carrossel e para os botões de link
+        // --- LÓGICA DE CLIQUE ATUALIZADA ---
         document.addEventListener('click', async (event) => {
+            // Lógica do carrossel (continua a mesma)
             if (event.target.matches('.carousel-btn')) {
                 const button = event.target;
                 const carouselContainer = button.closest('.detail-image-carousel, .image-container');
@@ -182,30 +162,33 @@
                 images[currentIndex].classList.add('active');
             }
 
+            // Lógica de clique nos botões de link
             if (event.target.matches('.product-link-btn')) {
                 const button = event.target;
                 const productId = button.dataset.productId;
                 const destinationUrl = button.dataset.url;
                 const target = button.dataset.target;
 
-                button.disabled = true; // Desabilita o botão para evitar múltiplos cliques
+                // CORREÇÃO APLICADA AQUI:
+                // 1. Abre o link IMEDIATAMENTE
+                if (target === '_blank') {
+                    window.open(destinationUrl, '_blank');
+                } else {
+                    window.location.href = destinationUrl;
+                }
 
+                // 2. DEPOIS, em segundo plano, manda contar o clique
                 try {
                     await supabaseClient.rpc('increment_click_count', { product_id_to_update: productId });
+                    console.log(`Clique contado para o produto ${productId}`);
                 } catch (rpcError) {
                     console.error("Erro ao contar o clique:", rpcError);
-                } finally {
-                    if (target === '_blank') {
-                        window.open(destinationUrl, '_blank');
-                        button.disabled = false; // Reabilita o botão
-                    } else {
-                        window.location.href = destinationUrl;
-                    }
                 }
             }
         });
 
         document.addEventListener('DOMContentLoaded', loadProductDetails);
     </script>
+
 </body>
 </html>
