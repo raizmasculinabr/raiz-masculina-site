@@ -6,103 +6,161 @@
     <title>Painel de Controle - Raiz Masculina</title>
     <link rel="stylesheet" href="painel.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <style>
-        /* Estilos adicionais específicos para o painel */
-        body { display: block; }
-        .panel-container { max-width: 900px; margin: 40px auto; padding: 20px; }
-        .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--light-grey); padding-bottom: 10px; }
+        body { display: block; } .panel-container { max-width: 900px; margin: 40px auto; padding: 20px; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--light-grey); padding-bottom: 10px; margin-bottom: 30px;}
         #logout-button { width: auto; padding: 10px 20px; background-color: var(--error-color); }
-        .form-container, .products-list-container { background-color: var(--white-color); padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); margin-top: 30px; }
-        .product-item { display: flex; align-items: center; gap: 20px; padding: 15px; border-bottom: 1px solid var(--light-grey); }
-        .product-item img { width: 80px; height: 80px; object-fit: cover; border-radius: 5px; }
-        .product-item-info { flex-grow: 1; }
-        .product-item-info h4 { margin: 0 0 5px 0; }
-        .product-item-actions button { width: auto; font-size: 0.8rem; padding: 5px 10px; margin-left: 10px; }
-        button.edit-btn { background-color: #3498db; }
-        button.delete-btn { background-color: #c0392b; }
+        .form-container, .list-container { background-color: var(--white-color); padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 30px; }
+        .item { display: flex; align-items: center; gap: 20px; padding: 15px; border-bottom: 1px solid var(--light-grey); }
+        .item.featured { background-color: #fffbe6; }
+        .item img { width: 80px; height: 80px; object-fit: cover; border-radius: 5px; }
+        .item-info { flex-grow: 1; } .item-info h4 { margin: 0 0 5px 0; }
+        .item-actions button { width: auto; font-size: 0.8rem; padding: 5px 10px; margin-left: 10px; }
+        button.edit-btn { background-color: #3498db; } button.delete-btn { background-color: #c0392b; } button.feature-btn { background-color: #f39c12; }
         input, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; margin-top: 5px; }
+        .settings-group { margin-bottom: 20px; } .settings-group label { margin-right: 15px; font-weight: normal; }
     </style>
 </head>
 <body>
-
     <div class="panel-container">
         <div class="panel-header">
-            <h2>Gerenciar Produtos</h2>
+            <h2>Painel de Controle</h2>
             <button id="logout-button">Sair</button>
         </div>
 
         <div class="form-container">
-            <h3>Adicionar Novo Produto</h3>
-            <form id="product-form">
-                <div class="input-group">
-                    <label for="title">Título do Produto</label>
-                    <input type="text" id="title" required>
-                </div>
-                <div class="input-group">
-                    <label for="category">Categoria</label>
-                    <input type="text" id="category" placeholder="Ex: Acessórios, Ferramentas, Eletrônicos">
-                </div>
-                <div class="input-group">
-                    <label for="description">Descrição</label>
-                    <textarea id="description" rows="3"></textarea>
-                </div>
-                <div class="input-group">
-                    <label for="shopee-link">Link da Shopee</label>
-                    <input type="url" id="shopee-link" placeholder="https://...">
-                </div>
-                <div class="input-group">
-                    <label for="image">Imagem do Produto</label>
-<input type="file" id="image" accept="image/*" required multiple>                </div>
-                <button type="submit">Salvar Produto</button>
-                <div id="form-message" style="margin-top: 15px;"></div>
-            </form>
+            <h3>Configurações Gerais</h3>
+            <div class="settings-group">
+                <strong>Modo de Destaques da Home:</strong>
+                <input type="radio" id="mode-auto" name="featured-mode" value="automatic">
+                <label for="mode-auto">Automático (Mais Clicados)</label>
+                <input type="radio" id="mode-manual" name="featured-mode" value="manual">
+                <label for="mode-manual">Manual (Escolher Destaques ⭐)</label>
+            </div>
         </div>
 
-        <div class="products-list-container">
-            <h3>Produtos Cadastrados</h3>
-            <div id="products-list">
+        <div class="list-container">
+            <h3>Gerenciar Produtos</h3>
+            <div id="products-list"></div>
+        </div>
+        <div class="form-container">
+            <h3 id="product-form-title">Adicionar Novo Produto</h3>
+            <form id="product-form">
+                <div class="input-group">
+                    <label for="product-title">Título do Produto</label>
+                    <input type="text" id="product-title" required>
                 </div>
+                <div class="input-group">
+                    <label for="product-category">Categoria(s) (separadas por vírgula)</label>
+                    <input type="text" id="product-category" placeholder="Ex: Acessórios, Ferramentas, Eletrônicos">
+                </div>
+                <div class="input-group">
+                    <label for="product-description">Descrição</label>
+                    <textarea id="product-description" rows="3"></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="product-shopee-link">Link da Shopee</label>
+                    <input type="url" id="product-shopee-link" placeholder="https://...">
+                </div>
+                <div class="input-group">
+                    <label for="product-image">Imagem(ns) do Produto</label>
+                    <input type="file" id="product-image" accept="image/*" required multiple>
+                </div>
+                <button type="submit">Salvar Produto</button>
+                <div id="product-form-message" style="margin-top: 15px;"></div>
+            </form>
+        </div>
+        
+        <div class="list-container">
+            <h3>Gerenciar Blog</h3>
+            <div id="posts-list"></div>
+        </div>
+        <div class="form-container">
+            <h3 id="post-form-title">Adicionar Novo Post</h3>
+            <form id="post-form">
+                <div class="input-group">
+                    <label for="post-title">Título do Post</label>
+                    <input type="text" id="post-title" required>
+                </div>
+                <div class="input-group">
+                    <label for="post-author">Autor</label>
+                    <input type="text" id="post-author" placeholder="Seu nome">
+                </div>
+                <div class="input-group">
+                    <label for="post-content">Conteúdo do Post</label>
+                    <textarea id="post-content" rows="10"></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="post-image">Imagem de Capa</label>
+                    <input type="file" id="post-image" accept="image/*">
+                </div>
+                <button type="submit">Salvar Post</button>
+                <div id="post-form-message" style="margin-top: 15px;"></div>
+            </form>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO DO SUPABASE ---
         const SUPABASE_URL = 'https://obsyewvdfodliuzrmwlk.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ic3lld3ZkZm9kbGl1enJtd2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY5MDYsImV4cCI6MjA3MzYxMjkwNn0.gERdLzMG0uVMf18-tcZtKe45UzSAdmqGg_YwjkeSCxE';
-
         const { createClient } = supabase;
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // --- LÓGICA DO PAINEL ---
+        
         document.addEventListener('DOMContentLoaded', () => {
+            // --- ELEMENTOS GERAIS ---
             const logoutButton = document.getElementById('logout-button');
+            const featuredModeRadios = document.querySelectorAll('input[name="featured-mode"]');
+            
+            // --- ELEMENTOS DE PRODUTOS ---
             const productForm = document.getElementById('product-form');
             const productsList = document.getElementById('products-list');
-            const formMessage = document.getElementById('form-message');
-            const formTitle = document.querySelector('.form-container h3');
-            const submitButton = productForm.querySelector('button[type="submit"]');
+            const productFormTitle = document.getElementById('product-form-title');
+            const productFormMessage = document.getElementById('product-form-message');
             let editingProductId = null;
 
-            // 1. GUARDA DE AUTENTICAÇÃO
+            // --- ELEMENTOS DO BLOG ---
+            const postForm = document.getElementById('post-form');
+            const postsList = document.getElementById('posts-list');
+            const postFormTitle = document.getElementById('post-form-title');
+            const postFormMessage = document.getElementById('post-form-message');
+            let editingPostId = null;
+
+            // --- GUARDA DE AUTENTICAÇÃO ---
             supabaseClient.auth.onAuthStateChange((_event, session) => {
                 if (!session) {
                     window.location.href = 'login.html';
                 } else {
+                    fetchSettings();
                     fetchProducts();
+                    fetchPosts();
                 }
             });
 
-            // 2. LÓGICA DE LOGOUT
-            logoutButton.addEventListener('click', async () => {
-                await supabaseClient.auth.signOut();
+            // --- LÓGICA DE LOGOUT ---
+            logoutButton.addEventListener('click', async () => await supabaseClient.auth.signOut());
+
+            // --- LÓGICA DE CONFIGURAÇÕES ---
+            async function fetchSettings() {
+                const { data, error } = await supabaseClient.from('settings').select('value').eq('setting_name', 'featured_mode').single();
+                if (data) {
+                    document.querySelector(`input[name="featured-mode"][value="${data.value}"]`).checked = true;
+                } else {
+                    console.error("Erro ao buscar configurações:", error);
+                }
+            }
+            featuredModeRadios.forEach(radio => {
+                radio.addEventListener('change', async (event) => {
+                    const newMode = event.target.value;
+                    await supabaseClient.from('settings').update({ value: newMode }).eq('setting_name', 'featured_mode');
+                    alert('Modo de destaques atualizado!');
+                });
             });
 
-            // 3. LÓGICA PARA BUSCAR E EXIBIR OS PRODUTOS
+            // --- LÓGICA DE PRODUTOS ---
             async function fetchProducts() {
                 const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
                 if (error) { console.error('Erro ao buscar produtos:', error); return; }
@@ -110,46 +168,41 @@
                 productsList.innerHTML = '';
                 data.forEach(product => {
                     const productElement = document.createElement('div');
-                    productElement.classList.add('product-item');
+                    productElement.classList.add('item');
                     if (product.is_featured) { productElement.classList.add('featured'); }
                     const thumbnailUrl = (product.image_urls && product.image_urls.length > 0) ? product.image_urls[0] : 'https://via.placeholder.com/80';
                     productElement.innerHTML = `
                         <img src="${thumbnailUrl}" alt="${product.title}">
-                        <div class="product-item-info">
+                        <div class="item-info">
                             <h4>${product.title} ${product.is_featured ? '⭐' : ''}</h4>
                             <p>${product.description ? product.description.substring(0, 50) : ''}...</p>
                         </div>
-                        <div class="product-item-actions">
+                        <div class="item-actions">
                             <button class="feature-btn" data-id="${product.id}" data-featured="${product.is_featured}">${product.is_featured ? 'Remover Destaque' : 'Tornar Destaque'}</button>
-                            <button class="edit-btn" data-id="${product.id}">Editar</button>
-                            <button class="delete-btn" data-id="${product.id}">Excluir</button>
-                        </div>
-                    `;
+                            <button class="edit-btn product-edit-btn" data-id="${product.id}">Editar</button>
+                            <button class="delete-btn product-delete-btn" data-id="${product.id}">Excluir</button>
+                        </div>`;
                     productsList.appendChild(productElement);
                 });
             }
             
-            // 4. LÓGICA PARA ADICIONAR/ATUALIZAR PRODUTO
             productForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
-                const title = document.getElementById('title').value;
-                const categoryInput = document.getElementById('category').value;
-                const description = document.getElementById('description').value;
-                const shopeeLink = document.getElementById('shopee-link').value;
-                const imageFiles = document.getElementById('image').files;
+                const title = document.getElementById('product-title').value;
+                const categoryInput = document.getElementById('product-category').value;
+                const description = document.getElementById('product-description').value;
+                const shopeeLink = document.getElementById('product-shopee-link').value;
+                const imageFiles = document.getElementById('product-image').files;
                 
-                formMessage.textContent = 'Enviando...';
-
-                // --- LINHA DA CORREÇÃO ADICIONADA AQUI ---
-                // Converte o texto "Relógios, Moda" em uma lista ["Relógios", "Moda"]
+                productFormMessage.textContent = 'Enviando...';
                 const categories = categoryInput.split(',').map(cat => cat.trim()).filter(Boolean);
-
                 let imageUrls = [];
+
                 if (imageFiles.length > 0) {
                     for (const file of imageFiles) {
                         const fileName = `${Date.now()}-${file.name}`;
                         const { error: uploadError } = await supabaseClient.storage.from('fotos-produtos').upload(fileName, file);
-                        if (uploadError) { formMessage.textContent = `Erro no upload: ${file.name}`; return; }
+                        if (uploadError) { productFormMessage.textContent = `Erro no upload: ${file.name}`; return; }
                         const { data: urlData } = supabaseClient.storage.from('fotos-produtos').getPublicUrl(fileName);
                         imageUrls.push(urlData.publicUrl);
                     }
@@ -160,20 +213,19 @@
                 if (editingProductId) {
                     if (imageUrls.length > 0) { productData.image_urls = imageUrls; }
                     const { error } = await supabaseClient.from('products').update(productData).eq('id', editingProductId);
-                    if (error) { formMessage.textContent = 'Erro ao atualizar produto.'; console.error(error); } else { formMessage.textContent = 'Produto atualizado!'; resetForm(); }
+                    if (error) { productFormMessage.textContent = 'Erro ao atualizar produto.'; } else { productFormMessage.textContent = 'Produto atualizado!'; resetProductForm(); }
                 } else {
-                    if (imageUrls.length === 0) { formMessage.textContent = 'Pelo menos uma imagem é obrigatória.'; return; }
+                    if (imageUrls.length === 0) { productFormMessage.textContent = 'Pelo menos uma imagem é obrigatória.'; return; }
                     productData.image_urls = imageUrls;
                     const { error } = await supabaseClient.from('products').insert([productData]);
-                    if (error) { formMessage.textContent = 'Erro ao salvar produto.'; console.error(error); } else { formMessage.textContent = 'Produto salvo!'; }
+                    if (error) { productFormMessage.textContent = 'Erro ao salvar produto.'; } else { productFormMessage.textContent = 'Produto salvo!'; }
                 }
                 
                 productForm.reset();
                 fetchProducts();
-                setTimeout(() => formMessage.textContent = '', 3000);
+                setTimeout(() => productFormMessage.textContent = '', 3000);
             });
 
-            // 5. LÓGICA DOS BOTÕES DE AÇÃO
             productsList.addEventListener('click', async (event) => {
                 const target = event.target;
                 const productId = target.dataset.id;
@@ -181,38 +233,125 @@
 
                 if (target.classList.contains('feature-btn')) {
                     const isCurrentlyFeatured = target.dataset.featured === 'true';
-                    const { error } = await supabaseClient.from('products').update({ is_featured: !isCurrentlyFeatured }).eq('id', productId);
-                    if (error) { alert('Erro ao alterar o status de destaque.'); } else { fetchProducts(); }
+                    await supabaseClient.from('products').update({ is_featured: !isCurrentlyFeatured }).eq('id', productId);
+                    fetchProducts();
                 }
 
-                if (target.classList.contains('delete-btn')) {
+                if (target.classList.contains('product-delete-btn')) {
                     if (confirm('Tem certeza que deseja excluir este produto?')) {
-                        const { error } = await supabaseClient.from('products').delete().eq('id', productId);
-                        if (error) { alert('Erro ao excluir o produto.'); } else { fetchProducts(); }
+                        await supabaseClient.from('products').delete().eq('id', productId);
+                        fetchProducts();
                     }
                 }
 
-                if (target.classList.contains('edit-btn')) {
-                    const { data, error } = await supabaseClient.from('products').select('*').eq('id', productId).single();
-                    if (error) { alert('Erro ao buscar dados do produto.'); return; }
-                    document.getElementById('title').value = data.title;
-                    document.getElementById('category').value = data.category ? data.category.join(', ') : '';
-                    document.getElementById('description').value = data.description;
-                    document.getElementById('shopee-link').value = data.shopee_link;
-                    document.getElementById('image').required = false;
-                    formTitle.textContent = 'Editar Produto';
-                    submitButton.textContent = 'Atualizar Produto';
+                if (target.classList.contains('product-edit-btn')) {
+                    const { data } = await supabaseClient.from('products').select('*').eq('id', productId).single();
+                    document.getElementById('product-title').value = data.title;
+                    document.getElementById('product-category').value = data.category ? data.category.join(', ') : '';
+                    document.getElementById('product-description').value = data.description;
+                    document.getElementById('product-shopee-link').value = data.shopee_link;
+                    document.getElementById('product-image').required = false;
+                    productFormTitle.textContent = 'Editar Produto';
+                    productForm.querySelector('button').textContent = 'Atualizar Produto';
                     editingProductId = data.id;
-                    window.scrollTo(0, 0);
+                    productForm.scrollIntoView({ behavior: 'smooth' });
                 }
             });
             
-            function resetForm() {
+            function resetProductForm() {
                 productForm.reset();
-                formTitle.textContent = 'Adicionar Novo Produto';
-                submitButton.textContent = 'Salvar Produto';
-                document.getElementById('image').required = true;
+                productFormTitle.textContent = 'Adicionar Novo Produto';
+                productForm.querySelector('button').textContent = 'Salvar Produto';
+                document.getElementById('product-image').required = true;
                 editingProductId = null;
+            }
+
+            // --- LÓGICA DO BLOG ---
+            async function fetchPosts() {
+                const { data, error } = await supabaseClient.from('posts').select('*').order('created_at', { ascending: false });
+                if (error) { console.error('Erro ao buscar posts:', error); return; }
+
+                postsList.innerHTML = '';
+                data.forEach(post => {
+                    const postElement = document.createElement('div');
+                    postElement.classList.add('item');
+                    postElement.innerHTML = `
+                        <img src="${post.image_url || 'https://via.placeholder.com/80'}" alt="${post.title}">
+                        <div class="item-info">
+                            <h4>${post.title}</h4>
+                            <p>Autor: ${post.author || 'N/A'}</p>
+                        </div>
+                        <div class="item-actions">
+                            <button class="edit-btn post-edit-btn" data-id="${post.id}">Editar</button>
+                            <button class="delete-btn post-delete-btn" data-id="${post.id}">Excluir</button>
+                        </div>`;
+                    postsList.appendChild(postElement);
+                });
+            }
+
+            postForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const title = document.getElementById('post-title').value;
+                const author = document.getElementById('post-author').value;
+                const content = document.getElementById('post-content').value;
+                const imageFile = document.getElementById('post-image').files[0];
+
+                postFormMessage.textContent = 'Salvando...';
+                let imageUrl = null;
+
+                if (imageFile) {
+                    const fileName = `${Date.now()}-${imageFile.name}`;
+                    const { error: uploadError } = await supabaseClient.storage.from('blog-images').upload(fileName, imageFile);
+                    if (uploadError) { postFormMessage.textContent = 'Erro no upload da imagem.'; return; }
+                    const { data: urlData } = supabaseClient.storage.from('blog-images').getPublicUrl(fileName);
+                    imageUrl = urlData.publicUrl;
+                }
+
+                const postData = { title, author, content };
+                
+                if (editingPostId) {
+                    if (imageUrl) { postData.image_url = imageUrl; }
+                    const { error } = await supabaseClient.from('posts').update(postData).eq('id', editingPostId);
+                    if (error) { postFormMessage.textContent = 'Erro ao atualizar o post.'; } else { postFormMessage.textContent = 'Post atualizado!'; resetPostForm(); }
+                } else {
+                    if (imageUrl) { postData.image_url = imageUrl; }
+                    const { error } = await supabaseClient.from('posts').insert([postData]);
+                    if (error) { postFormMessage.textContent = 'Erro ao salvar o post.'; } else { postFormMessage.textContent = 'Post salvo!'; }
+                }
+                postForm.reset();
+                fetchPosts();
+                setTimeout(() => postFormMessage.textContent = '', 3000);
+            });
+
+            postsList.addEventListener('click', async (event) => {
+                const target = event.target;
+                const postId = target.dataset.id;
+                if (!postId) return;
+
+                if (target.classList.contains('post-delete-btn')) {
+                    if (confirm('Tem certeza que deseja excluir este post?')) {
+                        await supabaseClient.from('posts').delete().eq('id', postId);
+                        fetchPosts();
+                    }
+                }
+
+                if (target.classList.contains('post-edit-btn')) {
+                    const { data } = await supabaseClient.from('posts').select('*').eq('id', postId).single();
+                    document.getElementById('post-title').value = data.title;
+                    document.getElementById('post-author').value = data.author;
+                    document.getElementById('post-content').value = data.content;
+                    postFormTitle.textContent = 'Editar Post';
+                    postForm.querySelector('button').textContent = 'Atualizar Post';
+                    editingPostId = data.id;
+                    postForm.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+
+            function resetPostForm() {
+                postForm.reset();
+                postFormTitle.textContent = 'Adicionar Novo Post';
+                postForm.querySelector('button').textContent = 'Salvar Post';
+                editingPostId = null;
             }
         });
     </script>

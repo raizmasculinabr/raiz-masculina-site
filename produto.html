@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Produto - Raiz Masculina</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.jpeg" alt="Logo Raiz Masculina" class="logo-img">
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="index.html">HOME</a></li>
+                    <li><a href="produtos.html" class="active">PRODUTOS</a></li>
+                    <li><a href="contato.html">CONTATO</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section id="detalhe-produto" class="section">
+            <div class="container">
+                <div id="product-detail-content" class="product-detail-container">
+                    <p>Carregando produto...</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="produtos-relacionados" class="section section-dark">
+            <div class="container">
+                <h2>VOCÊ TAMBÉM PODE GOSTAR</h2>
+                <div class="product-grid" id="related-products-grid">
+                    </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column sobre">
+                    <img src="images/raizroda.png" alt="Logo Raiz Masculina" class="logo-footer">
+                    <p>Encontrando a raiz do estilo e da funcionalidade para o homem moderno.</p>
+                </div>
+                <div class="footer-column links">
+                    <h4>Navegação</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="produtos.html">Produtos</a></li>
+                        <li><a href="contato.html">Contato</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column social">
+                    <h4>Contato & Redes</h4>
+                    <div class="social-links">
+                        <a href="https://www.instagram.com/raizmasculinabr" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://www.tiktok.com/@raizmasculinabr" target="_blank" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+                        <a href="mailto:raizmasculinabr@gmail.com" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Raiz Masculina. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const SUPABASE_URL = 'https://obsyewvdfodliuzrmwlk.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ic3lld3ZkZm9kbGl1enJtd2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY5MDYsImV4cCI6MjA3MzYxMjkwNn0.gERdLzMG0uVMf18-tcZtKe45UzSAdmqGg_YwjkeSCxE'; // Use sua chave correta
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const content = document.getElementById('product-detail-content');
+        const relatedGrid = document.getElementById('related-products-grid');
+
+        // Função para buscar e exibir produtos relacionados
+        async function loadRelatedProducts(categories, currentProductId) {
+            if (!categories || categories.length === 0) {
+                document.getElementById('produtos-relacionados').style.display = 'none';
+                return;
+            }
+
+            // Busca produtos que contenham QUALQUER uma das categorias do produto principal
+            const { data, error } = await supabaseClient
+                .from('products')
+                .select('*')
+                .contains('category', categories) // Magia acontece aqui: busca por itens na lista
+                .neq('id', currentProductId) // Garante que o produto principal não apareça
+                .limit(3); // Mostra no máximo 3 produtos relacionados
+
+            if (error || !data || data.length === 0) {
+                document.getElementById('produtos-relacionados').style.display = 'none'; // Esconde a seção se não houver relacionados
+                console.error("Erro ou nenhum relacionado encontrado:", error);
+                return;
+            }
+
+            relatedGrid.innerHTML = '';
+            data.forEach(product => {
+                const imageUrl = (product.image_urls && product.image_urls.length > 0) ? product.image_urls[0] : '';
+                relatedGrid.innerHTML += `
+                    <div class="product-card">
+                        <div class="image-container">
+                             <img src="${imageUrl}" alt="${product.title}" class="carousel-image active">
+                        </div>
+                        <h3>${product.title}</h3>
+                        <p>${product.description ? product.description.substring(0, 80) : ''}...</p>
+                        <button class="btn-secondary product-link-btn" data-product-id="${product.id}" data-url="produto.html?id=${product.id}">Ver Detalhes</button>
+                    </div>
+                `;
+            });
+        }
+
+        // Função principal que carrega o produto da URL
+        async function loadProductDetails() {
+            const params = new URLSearchParams(window.location.search);
+            const productId = params.get('id');
+
+            if (!productId) {
+                content.innerHTML = '<p>Produto não encontrado. Volte para a <a href="produtos.html">lista de produtos</a>.</p>';
+                return;
+            }
+
+            const { data: product, error } = await supabaseClient.from('products').select('*').eq('id', productId).single();
+
+            if (error || !product) {
+                console.error('Erro ao buscar produto:', error);
+                content.innerHTML = '<p>Produto não encontrado. Volte para a <a href="produtos.html">lista de produtos</a>.</p>';
+                return;
+            }
+
+            document.title = `${product.title} - Raiz Masculina`;
+
+            let imagesHTML = '';
+            if (product.image_urls && product.image_urls.length > 0) {
+                product.image_urls.forEach((url, index) => {
+                    imagesHTML += `<img src="${url}" alt="${product.title} - imagem ${index + 1}" class="carousel-image ${index === 0 ? 'active' : ''}">`;
+                });
+            }
+
+            content.innerHTML = `
+                <div class="detail-image-carousel">
+                    <div class="image-container">
+                        ${imagesHTML}
+                        ${(product.image_urls && product.image_urls.length > 1) ? '<button class="carousel-btn prev">&lt;</button><button class="carousel-btn next">&gt;</button>' : ''}
+                    </div>
+                </div>
+                <div class="detail-info">
+                    <h1>${product.title}</h1>
+                    <p class="detail-category">Categorias: ${product.category ? product.category.join(', ') : 'N/A'}</p>
+                    <p class="detail-description">${product.description}</p>
+                    <button class="btn-primary buy-button product-link-btn" data-product-id="${product.id}" data-url="${product.shopee_link}" data-target="_blank">Comprar na Shopee</button>
+                </div>
+            `;
+            
+            // Após carregar o produto principal, busca os relacionados
+            loadRelatedProducts(product.category, product.id);
+        }
+
+        // Função global de clique para o carrossel e para os botões de link
+        document.addEventListener('click', async (event) => {
+            if (event.target.matches('.carousel-btn')) {
+                const button = event.target;
+                const carouselContainer = button.closest('.detail-image-carousel, .image-container');
+                const images = carouselContainer.querySelectorAll('.carousel-image');
+                let currentIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
+                images[currentIndex].classList.remove('active');
+                if (button.classList.contains('next')) { currentIndex = (currentIndex + 1) % images.length; } 
+                else if (button.classList.contains('prev')) { currentIndex = (currentIndex - 1 + images.length) % images.length; }
+                images[currentIndex].classList.add('active');
+            }
+
+            if (event.target.matches('.product-link-btn')) {
+                const button = event.target;
+                const productId = button.dataset.productId;
+                const destinationUrl = button.dataset.url;
+                const target = button.dataset.target;
+
+                button.disabled = true; // Desabilita o botão para evitar múltiplos cliques
+
+                try {
+                    await supabaseClient.rpc('increment_click_count', { product_id_to_update: productId });
+                } catch (rpcError) {
+                    console.error("Erro ao contar o clique:", rpcError);
+                } finally {
+                    if (target === '_blank') {
+                        window.open(destinationUrl, '_blank');
+                        button.disabled = false; // Reabilita o botão
+                    } else {
+                        window.location.href = destinationUrl;
+                    }
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', loadProductDetails);
+    </script>
+</body>
+</html>

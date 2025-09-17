@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Raiz Masculina - Produtos</title>
     <link rel="stylesheet" href="style.css">
+        <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Estilos para os botões de filtro */
         .filtros-container { text-align: center; margin-bottom: 40px; }
         .filtro-btn { background: #fff; border: 1px solid #ccc; padding: 10px 20px; margin: 5px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s ease; }
         .filtro-btn:hover { background: #f0f0f0; }
@@ -18,7 +19,6 @@
     </style>
 </head>
 <body>
-
     <header>
         <div class="container">
             <a href="index.html" class="logo">
@@ -29,6 +29,7 @@
                     <li><a href="index.html">HOME</a></li>
                     <li><a href="produtos.html" class="active">PRODUTOS</a></li>
                     <li><a href="contato.html">CONTATO</a></li>
+                    <li><a href="blog.html">BLOG</a></li>
                 </ul>
             </nav>
         </div>
@@ -37,7 +38,10 @@
     <main>
         <section id="nossa-colecao" class="section">
             <div class="container">
-                <h2>NOSSA COLEÇÃO</h2>
+                <h2>NOSSA COLEÇÃO DE PRODUTOS</h2>
+                <div class="search-container">
+                    <input type="search" id="search-input" placeholder="Buscar por nome do produto...">
+                </div>
                 <div class="filtros-container" id="filtros-container"></div>
                 <div class="product-grid" id="produtos-grid"></div>
             </div>
@@ -46,32 +50,66 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 Raiz Masculina. Todos os direitos reservados.</p>
+            <div class="footer-content">
+                <div class="footer-column sobre">
+                    <img src="images/raizroda.png" alt="Logo Raiz Masculina" class="logo-footer">
+                    <p>Encontrando a raiz do estilo e da funcionalidade para o homem moderno.</p>
+                </div>
+                <div class="footer-column links">
+                    <h4>Navegação</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="produtos.html">Produtos</a></li>
+                        <li><a href="contato.html">Contato</a></li>
+                        <li><a href="blog.html">BLOG</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column social">
+                    <h4>Contato & Redes</h4>
+                    <div class="social-links">
+                        <a href="https://www.instagram.com/raizmasculinabr" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://www.tiktok.com/@raizmasculinabr" target="_blank" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+                        <a href="mailto:raizmasculinabr@gmail.com" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Raiz Masculina. Todos os direitos reservados.</p>
+            </div>
         </div>
     </footer>
 
     <script>
         const SUPABASE_URL = 'https://obsyewvdfodliuzrmwlk.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ic3lld3ZkZm9kbGl1enJtd2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY5MDYsImV4cCI6MjA3MzYxMjkwNn0.gERdLzMG0uVMf18-tcZtKe45UzSAdmqGg_YwjkeSCxE';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ic3lld3ZkZm9kbGl1enJtd2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY5MDYsImV4cCI6MjA3MzYxMjkwNn0.gERdLzMG0uVMf18-tcZtKe45UzSAdmqGg_YwjkeSCxE'; // Use sua chave correta
         const { createClient } = supabase;
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const grid = document.getElementById('produtos-grid');
         const filtrosContainer = document.getElementById('filtros-container');
+        const searchInput = document.getElementById('search-input');
         let allProductsData = [];
+        let activeCategoryFilter = 'todos';
+        let searchTerm = '';
 
-        function renderProducts(filter = 'todos') {
+        function applyFiltersAndRender() {
+            let produtosFiltrados = [...allProductsData];
+            if (activeCategoryFilter !== 'todos') {
+                produtosFiltrados = produtosFiltrados.filter(p => p.category && p.category.map(c => c.toLowerCase()).includes(activeCategoryFilter.toLowerCase()));
+            }
+            if (searchTerm) {
+                produtosFiltrados = produtosFiltrados.filter(p => p.title.toLowerCase().includes(searchTerm));
+            }
+            renderProducts(produtosFiltrados);
+        }
+
+        function renderProducts(productsToRender) {
             grid.innerHTML = '';
-            const produtosFiltrados = (filter === 'todos')
-                ? allProductsData
-                : allProductsData.filter(p => p.category && p.category.includes(filter));
-
-            if (produtosFiltrados.length === 0) {
-                grid.innerHTML = '<p>Nenhum produto encontrado nesta categoria.</p>';
+            if (productsToRender.length === 0) {
+                grid.innerHTML = '<p>Nenhum produto encontrado com estes critérios.</p>';
                 return;
             }
-
-            produtosFiltrados.forEach(product => {
+            productsToRender.forEach(product => {
                 let imagesHTML = '';
                 if (product.image_urls && product.image_urls.length > 0) {
                     product.image_urls.forEach((url, index) => {
@@ -86,71 +124,72 @@
                         </div>
                         <h3>${product.title}</h3>
                         <p>${product.description ? product.description.substring(0, 80) : ''}...</p>
-                        <a href="${product.shopee_link}" target="_blank" class="btn-secondary">Ver na Shopee</a>
+                        <button class="btn-secondary product-link-btn" data-product-id="${product.id}" data-url="produto.html?id=${product.id}">Ver Detalhes</button>
                     </div>
                 `;
             });
         }
-        
-        document.addEventListener('click', function(event) {
+
+        async function loadAllProductsAndFilters() {
+            grid.innerHTML = '<p>Carregando produtos...</p>';
+            const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
+            if (error) { grid.innerHTML = '<p>Erro ao carregar os produtos.</p>'; console.error(error); return; }
+            allProductsData = data;
+            
+            const predefinedFilters = ['Acessórios', 'Eletrônicos', 'Ferramentas', 'Moda', 'Relógios', 'Infantil', 'Nome', 'Roupas'];
+            const activeCategories = new Set();
+            data.forEach(p => {
+                if (p.category) { p.category.forEach(cat => activeCategories.add(cat.trim().toLowerCase())); }
+            });
+            filtrosContainer.innerHTML = '<button class="filtro-btn active" data-category="todos">Todos</button>';
+            predefinedFilters.forEach(filter => {
+                if (activeCategories.has(filter.toLowerCase())) {
+                    filtrosContainer.innerHTML += `<button class="filtro-btn" data-category="${filter}">${filter}</button>`;
+                }
+            });
+            applyFiltersAndRender();
+        }
+
+        document.addEventListener('click', async (event) => {
             if (event.target.matches('.carousel-btn')) {
                 const button = event.target;
                 const card = button.closest('.product-card');
                 const images = card.querySelectorAll('.carousel-image');
                 let currentIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
                 images[currentIndex].classList.remove('active');
-                if (button.classList.contains('next')) {
-                    currentIndex = (currentIndex + 1) % images.length;
-                } else if (button.classList.contains('prev')) {
-                    currentIndex = (currentIndex - 1 + images.length) % images.length;
-                }
+                if (button.classList.contains('next')) { currentIndex = (currentIndex + 1) % images.length; } 
+                else if (button.classList.contains('prev')) { currentIndex = (currentIndex - 1 + images.length) % images.length; }
                 images[currentIndex].classList.add('active');
             }
-        });
 
-        async function loadAllProductsAndFilters() {
-            grid.innerHTML = '<p>Carregando produtos...</p>';
-            const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
-            
-            if (error) {
-                grid.innerHTML = '<p>Erro ao carregar os produtos.</p>';
-                console.error(error);
-                return;
+            if (event.target.matches('.product-link-btn')) {
+                const button = event.target;
+                const productId = button.dataset.productId;
+                const destinationUrl = button.dataset.url;
+                try {
+                    await supabaseClient.rpc('increment_click_count', { product_id_to_update: productId });
+                } catch (rpcError) { console.error("Erro ao contar o clique:", rpcError); } 
+                finally { window.location.href = destinationUrl; }
             }
-            
-            allProductsData = data; 
-
-            const predefinedFilters = ['Acessórios', 'Eletrônicos', 'Ferramentas', 'Moda', 'Relógios'];
-            const activeCategories = new Set();
-            data.forEach(p => {
-                if (p.category) {
-                    p.category.forEach(cat => activeCategories.add(cat));
-                }
-            });
-
-            filtrosContainer.innerHTML = '<button class="filtro-btn active" data-category="todos">Todos</button>';
-            predefinedFilters.forEach(filter => {
-                if (activeCategories.has(filter)) {
-                    filtrosContainer.innerHTML += `<button class="filtro-btn" data-category="${filter}">${filter}</button>`;
-                }
-            });
-
-            renderProducts();
-        }
-
+        });
+        
         filtrosContainer.addEventListener('click', (event) => {
             if (event.target.matches('.filtro-btn')) {
                 document.querySelectorAll('.filtro-btn').forEach(btn => btn.classList.remove('active'));
                 event.target.classList.add('active');
-                const categoriaSelecionada = event.target.dataset.category;
-                renderProducts(categoriaSelecionada);
+                activeCategoryFilter = event.target.dataset.category;
+                applyFiltersAndRender();
             }
+        });
+
+        searchInput.addEventListener('input', (event) => {
+            searchTerm = event.target.value.trim().toLowerCase();
+            applyFiltersAndRender();
         });
         
         document.addEventListener('DOMContentLoaded', () => {
             loadAllProductsAndFilters();
         });
     </script>
-
 </body>
 </html>
