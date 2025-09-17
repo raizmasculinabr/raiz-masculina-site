@@ -159,3 +159,78 @@ footer { background-color: var(--dark-grey); color: #a0a0a0; padding: 50px 0 20p
     line-height: 1.8;
     color: #444;
 }
+/* ---- Estilos do Menu Hambúrguer e Responsivo ---- */
+
+.hamburger {
+    display: none; /* Escondido no desktop */
+    flex-direction: column;
+    justify-content: space-around;
+    width: 2rem;
+    height: 2rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001; /* Garante que fique acima de outros elementos */
+}
+
+.hamburger-line {
+    width: 2rem;
+    height: 0.25rem;
+    background: var(--dark-grey);
+    border-radius: 10px;
+    transition: all 0.3s linear;
+    position: relative;
+    transform-origin: 1px;
+}
+
+/* Estilos para quando o menu está aberto */
+.hamburger.is-open .hamburger-line:nth-child(1) {
+    transform: rotate(45deg);
+}
+.hamburger.is-open .hamburger-line:nth-child(2) {
+    opacity: 0;
+    transform: translateX(20px);
+}
+.hamburger.is-open .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg);
+}
+
+
+/* Media Query para telas de celular */
+@media (max-width: 768px) {
+    /* Mostra o botão hambúrguer */
+    .hamburger {
+        display: flex;
+    }
+
+    /* Esconde a navegação tradicional e a transforma em um painel que desliza */
+    .main-nav {
+        position: fixed;
+        top: 0;
+        right: -100%; /* Começa fora da tela */
+        width: 70%;
+        height: 100vh;
+        background-color: var(--white-color);
+        box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        transition: right 0.3s ease-in-out;
+        z-index: 1000;
+        padding-top: 5rem;
+    }
+
+    /* Quando o menu está aberto, ele desliza para dentro da tela */
+    .main-nav.is-open {
+        right: 0;
+    }
+
+    /* Ajusta a lista de links para ficar na vertical */
+    .main-nav ul {
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+    }
+    
+    .main-nav a {
+        font-size: 1.2rem;
+    }
+}
