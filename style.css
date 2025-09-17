@@ -159,35 +159,3 @@ footer { background-color: var(--dark-grey); color: #a0a0a0; padding: 50px 0 20p
     line-height: 1.8;
     color: #444;
 }
-/* ---- Estilos do Cursor Personalizado ---- */
-
-/* Esconde o cursor padrão do mouse */
-html, body {
-    cursor: none;
-}
-
-/* Deixa o cursor padrão visível em links e botões, para acessibilidade */
-a, button, input {
-    cursor: none;
-}
-
-.custom-cursor {
-    width: 25px;
-    height: 25px;
-    background-color: #2E8B57; /* Verde Mar (Sea Green) - você pode trocar por outro tom de verde */
-    border-radius: 50%;
-    position: fixed; /* Fica fixo na tela */
-    top: 0;
-    left: 0;
-    pointer-events: none; /* MUITO IMPORTANTE: Permite que você clique "através" do cursor */
-    z-index: 9999; /* Garante que ele fique por cima de tudo */
-    transition: transform 0.1s ease-out, width 0.2s ease, height 0.2s ease;
-    will-change: transform; /* Otimização para a animação */
-}
-
-/* Estilo do cursor quando passa por cima de um link ou botão */
-.custom-cursor.hover {
-    width: 40px;
-    height: 40px;
-    background-color: rgba(46, 139, 87, 0.5); /* Fica maior e semitransparente */
-}
