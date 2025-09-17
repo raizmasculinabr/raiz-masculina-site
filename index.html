@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raiz Masculina - Home</title>
+    <title>Raiz Masculina | Acessórios, Ferramentas e Estilo para o Homem</title>
+    <meta name="description" content="Encontre a curadoria completa de produtos para o homem moderno na Raiz Masculina. De relógios e moda a eletrônicos e ferramentas. O presente perfeito está aqui.">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="icon" type="image/x-icon" href="images/favicon.ico">
@@ -14,21 +15,19 @@
 </head>
 <body>
 <div class="nav-overlay" id="nav-overlay"></div>
-    <header>
+   <header>
         <div class="container">
             <a href="index.html" class="logo">
                 <img src="images/logo.jpeg" alt="Logo Raiz Masculina" class="logo-img">
             </a>
-            
             <nav class="main-nav" id="main-nav">
                 <ul>
-                    <li><a href="index.html" class="active">HOME</a></li>
+                    <li><a href="index.html">HOME</a></li>
                     <li><a href="produtos.html">PRODUTOS</a></li>
                     <li><a href="contato.html">CONTATO</a></li>
-                    <li><a href="blog.html">BLOG</a></li>
+                    <li><a href="faq.html">FAQ & SUPORTE</a></li>
                 </ul>
             </nav>
-
             <button class="hamburger" id="hamburger-button" aria-label="Abrir menu">
                 <span class="hamburger-line"></span>
                 <span class="hamburger-line"></span>
@@ -36,7 +35,6 @@
             </button>
         </div>
     </header>
-
     <main>
         <section class="hero" id="hero-section">
             <div class="container">
@@ -45,8 +43,7 @@
             <div class="hero-overlay"></div> 
         </section>
 
-        <section id="quem-somos" class="section">
-            <div class="container">
+<section id="quem-somos" class="section fade-in-section">            <div class="container">
                 <h2>QUEM SOMOS</h2>
                 <div class="quem-somos-content">
                     <div class="quem-somos-image">
@@ -64,10 +61,16 @@
             </div>
         </section>
 
-        <section id="destaques" class="section section-dark">
-            <div class="container">
+<section id="destaques" class="section section-dark fade-in-section">            <div class="container">
                 <h2>PRODUTOS EM DESTAQUE</h2>
                 <div class="product-grid" id="destaques-grid"></div>
+            </div>
+        </section>
+        <section id="depoimentos" class="section fade-in-section">
+            <div class="container">
+                <h2>O QUE NOSSOS CLIENTES DIZEM</h2>
+                <div class="testimonials-grid" id="testimonials-grid">
+                    </div>
             </div>
         </section>
     </main>
@@ -85,7 +88,7 @@
                         <li><a href="index.html">Home</a></li>
                         <li><a href="produtos.html">Produtos</a></li>
                         <li><a href="contato.html">Contato</a></li>
-                        <li><a href="blog.html">BLOG</a></li>
+                        <li><a href="faq.html">FAQ & SUPORTE</a></li>
                     </ul>
                 </div>
                 <div class="footer-column social">
@@ -202,6 +205,7 @@
             heroSection.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('${backgroundImageURL}')`;
             typeEraseLoop();
             loadFeaturedProducts();
+            loadTestimonials();
         });
 
         // Função global para contar cliques e redirecionar
@@ -220,6 +224,31 @@
                 }
             }
         });
+        // --- NOVA FUNÇÃO PARA CARREGAR DEPOIMENTOS ---
+            async function loadTestimonials() {
+                const grid = document.getElementById('testimonials-grid');
+                if (!grid) return;
+
+                const { data, error } = await supabaseClient
+                    .from('testimonials')
+                    .select('*')
+                    .limit(3); // Pega os 3 mais recentes
+
+                if (error || !data || data.length === 0) {
+                    document.getElementById('depoimentos').style.display = 'none';
+                    return;
+                }
+                
+                grid.innerHTML = '';
+                data.forEach(testimonial => {
+                    grid.innerHTML += `
+                        <div class="testimonial-card">
+                            <blockquote>“${testimonial.testimonial_text}”</blockquote>
+                            <cite>– ${testimonial.customer_name}</cite>
+                        </div>
+                    `;
+                });
+            }
     </script>
     
 </body>
