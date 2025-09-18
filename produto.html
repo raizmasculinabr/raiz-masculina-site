@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" id="meta-description" content="Veja os detalhes sobre nossos produtos na Raiz Masculina.">
     <title>Detalhes do Produto - Raiz Masculina</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,16 +20,14 @@
             <a href="index.html" class="logo">
                 <img src="images/logo.jpeg" alt="Logo Raiz Masculina" class="logo-img">
             </a>
-            
             <nav class="main-nav" id="main-nav">
                 <ul>
-                    <li><a href="index.html" class="active">HOME</a></li>
+                    <li><a href="index.html">HOME</a></li>
                     <li><a href="produtos.html">PRODUTOS</a></li>
                     <li><a href="contato.html">CONTATO</a></li>
-                    <li><a href="blog.html">BLOG</a></li>
+                    <li><a href="faq.html">FAQ & SUPORTE</a></li>
                 </ul>
             </nav>
-
             <button class="hamburger" id="hamburger-button" aria-label="Abrir menu">
                 <span class="hamburger-line"></span>
                 <span class="hamburger-line"></span>
@@ -38,16 +37,14 @@
     </header>
 
     <main>
-        <section id="detalhe-produto" class="section">
-            <div class="container">
+<section id="detalhe-produto" class="section fade-in-section">            <div class="container">
                 <div id="product-detail-content" class="product-detail-container">
                     <p>Carregando produto...</p>
                 </div>
             </div>
         </section>
 
-        <section id="produtos-relacionados" class="section section-dark">
-            <div class="container">
+<section id="produtos-relacionados" class="section section-dark fade-in-section">            <div class="container">
                 <h2>VOCÊ TAMBÉM PODE GOSTAR</h2>
                 <div class="product-grid" id="related-products-grid">
                     </div>
@@ -68,6 +65,7 @@
                         <li><a href="index.html">Home</a></li>
                         <li><a href="produtos.html">Produtos</a></li>
                         <li><a href="contato.html">Contato</a></li>
+                        <li><a href="faq.html">FAQ & SUPORTE</a></li>
                     </ul>
                 </div>
                 <div class="footer-column social">
@@ -123,13 +121,20 @@
 
         // Função principal que carrega o produto da URL (continua a mesma)
         async function loadProductDetails() {
+            const content = document.getElementById('product-detail-content');
             const params = new URLSearchParams(window.location.search);
             const productId = params.get('id');
             if (!productId) { content.innerHTML = '<p>Produto não encontrado.</p>'; return; }
 
             const { data: product, error } = await supabaseClient.from('products').select('*').eq('id', productId).single();
             if (error || !product) { content.innerHTML = '<p>Produto não encontrado.</p>'; return; }
-
+// --- ATUALIZAÇÃO DE SEO ---
+            document.title = `${product.title} - Raiz Masculina`;
+            const metaDescription = document.getElementById('meta-description');
+            if (metaDescription) {
+                // Pega os primeiros 155 caracteres da descrição do produto para o Google
+                metaDescription.setAttribute('content', product.description ? product.description.substring(0, 155) + '...' : 'Veja detalhes deste produto na Raiz Masculina.');
+            }
             document.title = `${product.title} - Raiz Masculina`;
 
             let imagesHTML = '';

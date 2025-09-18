@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ & Suporte ao Cliente - Raiz Masculina</title>
+    <meta name="description" content="Tem alguma dúvida sobre nossos produtos, compras ou envios? Envie sua pergunta para a equipe de suporte da Raiz Masculina e responderemos em breve.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="nav-overlay" id="nav-overlay"></div>
+ <header>
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.jpeg" alt="Logo Raiz Masculina" class="logo-img">
+            </a>
+            <nav class="main-nav" id="main-nav">
+                <ul>
+                    <li><a href="index.html">HOME</a></li>
+                    <li><a href="produtos.html">PRODUTOS</a></li>
+                    <li><a href="contato.html">CONTATO</a></li>
+                    <li><a href="faq.html">FAQ & SUPORTE</a></li>
+                </ul>
+            </nav>
+            <button class="hamburger" id="hamburger-button" aria-label="Abrir menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </header>
+    <main>
+<section id="suporte" class="section fade-in-section">            <div class="container">
+                <h2>FAQ & SUPORTE</h2>
+                <p class="contato-subtitulo">Tem alguma dúvida? Envie para nós através do formulário abaixo.</p>
+                <div class="form-container" style="max-width: 700px; margin: 0 auto;">
+                    <form id="ticket-form">
+                        <div class="input-group"><label for="user-name">Seu Nome</label><input type="text" id="user-name" required></div>
+                        <div class="input-group"><label for="user-email">Seu E-mail (para receber a resposta)</label><input type="email" id="user-email" required></div>
+                        <div class="input-group"><label for="user-contact">Seu Contato (WhatsApp, opcional)</label><input type="text" id="user-contact"></div>
+                        <div class="input-group"><label for="question-text">Sua Dúvida ou Mensagem</label><textarea id="question-text" rows="6" required></textarea></div>
+                        <div class="input-group"><label for="attachment">Anexar uma Imagem (opcional)</label><input type="file" id="attachment" accept="image/*"></div>
+                        <button type="submit" class="btn-primary" style="width: 100%;">Enviar Pergunta</button>
+                        <div id="form-message" style="margin-top: 15px; text-align: center;"></div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+   <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column sobre">
+                    <img src="images/raizroda.png" alt="Logo Raiz Masculina" class="logo-footer">
+                    <p>Encontrando a raiz do estilo e da funcionalidade para o homem moderno.</p>
+                </div>
+                <div class="footer-column links">
+                    <h4>Navegação</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="produtos.html">Produtos</a></li>
+                        <li><a href="contato.html">Contato</a></li>
+                        <li><a href="faq.html">FAQ & SUPORTE</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column social">
+                    <h4>Contato & Redes</h4>
+                    <div class="social-links">
+                        <a href="https://www.instagram.com/raizmasculinabr" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://www.tiktok.com/@raizmasculinabr" target="_blank" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+                        <a href="mailto:raizmasculinabr@gmail.com" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Raiz Masculina. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="main.js"></script>
+    <script>
+        const SUPABASE_URL = 'https://obsyewvdfodliuzrmwlk.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ic3lld3ZkZm9kbGl1enJtd2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY5MDYsImV4cCI6MjA3MzYxMjkwNn0.gERdLzMG0uVMf18-tcZtKe45UzSAdmqGg_YwjkeSCxE'; // Use sua chave
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const ticketForm = document.getElementById('ticket-form');
+        const formMessage = document.getElementById('form-message');
+
+        ticketForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const submitButton = ticketForm.querySelector('button');
+            submitButton.disabled = true;
+            formMessage.textContent = 'Enviando sua pergunta...';
+            formMessage.style.color = 'inherit';
+
+            const name = document.getElementById('user-name').value;
+            const email = document.getElementById('user-email').value;
+            const contact = document.getElementById('user-contact').value;
+            const question_text = document.getElementById('question-text').value;
+            const attachmentFile = document.getElementById('attachment').files[0];
+            
+            let attachmentUrl = null;
+
+            // 1. Se houver um anexo, faz o upload primeiro
+            if (attachmentFile) {
+                const fileName = `${Date.now()}-${attachmentFile.name}`;
+                const { error: uploadError } = await supabaseClient.storage
+                    .from('support-attachments')
+                    .upload(fileName, attachmentFile);
+                
+                if (uploadError) {
+                    formMessage.textContent = 'Erro no upload do anexo. Tente novamente.';
+                    formMessage.style.color = 'var(--error-color)';
+                    console.error('Upload Error:', uploadError);
+                    submitButton.disabled = false;
+                    return;
+                }
+                
+                const { data: urlData } = supabaseClient.storage
+                    .from('support-attachments')
+                    .getPublicUrl(fileName);
+                attachmentUrl = urlData.publicUrl;
+            }
+
+            // 2. Salva o ticket no banco de dados
+            const { error: insertError } = await supabaseClient
+                .from('support_tickets')
+                .insert([{ 
+                    name: name, 
+                    email: email,
+                    contact: contact,
+                    question_text: question_text,
+                    attachment_url: attachmentUrl
+                }]);
+            
+            if (insertError) {
+                formMessage.textContent = 'Erro ao enviar sua pergunta. Tente novamente mais tarde.';
+                formMessage.style.color = 'var(--error-color)';
+                console.error('Insert Error:', insertError);
+                submitButton.disabled = false;
+            } else {
+                formMessage.textContent = 'Pergunta enviada com sucesso! Responderemos no seu e-mail em breve.';
+                formMessage.style.color = 'green';
+                ticketForm.reset();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel de Controle - Raiz Masculina</title>
     <link rel="stylesheet" href="painel.css">
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -50,56 +50,34 @@
         <div class="form-container">
             <h3 id="product-form-title">Adicionar Novo Produto</h3>
             <form id="product-form">
-                <div class="input-group">
-                    <label for="product-title">Título do Produto</label>
-                    <input type="text" id="product-title" required>
-                </div>
-                <div class="input-group">
-                    <label for="product-category">Categoria(s) (separadas por vírgula)</label>
-                    <input type="text" id="product-category" placeholder="Ex: Acessórios, Ferramentas, Eletrônicos">
-                </div>
-                <div class="input-group">
-                    <label for="product-description">Descrição</label>
-                    <textarea id="product-description" rows="3"></textarea>
-                </div>
-                <div class="input-group">
-                    <label for="product-shopee-link">Link da Shopee</label>
-                    <input type="url" id="product-shopee-link" placeholder="https://...">
-                </div>
-                <div class="input-group">
-                    <label for="product-image">Imagem(ns) do Produto</label>
-                    <input type="file" id="product-image" accept="image/*" required multiple>
-                </div>
+                <div class="input-group"><label for="product-title">Título do Produto</label><input type="text" id="product-title" required></div>
+                <div class="input-group"><label for="product-category">Categoria(s) (separadas por vírgula)</label><input type="text" id="product-category" placeholder="Ex: Acessórios, Ferramentas, Eletrônicos"></div>
+                <div class="input-group"><label for="product-description">Descrição</label><textarea id="product-description" rows="3"></textarea></div>
+                <div class="input-group"><label for="product-shopee-link">Link da Shopee</label><input type="url" id="product-shopee-link" placeholder="https://..."></div>
+                <div class="input-group"><label for="product-image">Imagem(ns) do Produto</label><input type="file" id="product-image" accept="image/*" required multiple></div>
                 <button type="submit">Salvar Produto</button>
                 <div id="product-form-message" style="margin-top: 15px;"></div>
             </form>
         </div>
         
+        
         <div class="list-container">
-            <h3>Gerenciar Blog</h3>
-            <div id="posts-list"></div>
+            <h3>Gerenciar Depoimentos</h3>
+            <div id="testimonials-list"></div>
         </div>
         <div class="form-container">
-            <h3 id="post-form-title">Adicionar Novo Post</h3>
-            <form id="post-form">
+            <h3 id="testimonial-form-title">Adicionar Novo Depoimento</h3>
+            <form id="testimonial-form">
                 <div class="input-group">
-                    <label for="post-title">Título do Post</label>
-                    <input type="text" id="post-title" required>
+                    <label for="customer-name">Nome do Cliente</label>
+                    <input type="text" id="customer-name" required placeholder="Ex: João P.">
                 </div>
                 <div class="input-group">
-                    <label for="post-author">Autor</label>
-                    <input type="text" id="post-author" placeholder="Seu nome">
+                    <label for="testimonial-text">Texto do Depoimento</label>
+                    <textarea id="testimonial-text" rows="4" required></textarea>
                 </div>
-                <div class="input-group">
-                    <label for="post-content">Conteúdo do Post</label>
-                    <textarea id="post-content" rows="10"></textarea>
-                </div>
-                <div class="input-group">
-                    <label for="post-image">Imagem de Capa</label>
-                    <input type="file" id="post-image" accept="image/*">
-                </div>
-                <button type="submit">Salvar Post</button>
-                <div id="post-form-message" style="margin-top: 15px;"></div>
+                <button type="submit">Salvar Depoimento</button>
+                <div id="testimonial-form-message" style="margin-top: 15px;"></div>
             </form>
         </div>
     </div>
@@ -111,46 +89,44 @@
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         document.addEventListener('DOMContentLoaded', () => {
-            // --- ELEMENTOS GERAIS ---
+            // ELEMENTOS GERAIS
             const logoutButton = document.getElementById('logout-button');
             const featuredModeRadios = document.querySelectorAll('input[name="featured-mode"]');
             
-            // --- ELEMENTOS DE PRODUTOS ---
+            // ELEMENTOS DE PRODUTOS
             const productForm = document.getElementById('product-form');
             const productsList = document.getElementById('products-list');
             const productFormTitle = document.getElementById('product-form-title');
             const productFormMessage = document.getElementById('product-form-message');
             let editingProductId = null;
 
-            // --- ELEMENTOS DO BLOG ---
-            const postForm = document.getElementById('post-form');
-            const postsList = document.getElementById('posts-list');
-            const postFormTitle = document.getElementById('post-form-title');
-            const postFormMessage = document.getElementById('post-form-message');
-            let editingPostId = null;
+            // ELEMENTOS DE DEPOIMENTOS
+            const testimonialForm = document.getElementById('testimonial-form');
+            const testimonialsList = document.getElementById('testimonials-list');
+            const testimonialFormTitle = document.getElementById('testimonial-form-title');
+            const testimonialFormMessage = document.getElementById('testimonial-form-message');
+            let editingTestimonialId = null;
 
-            // --- GUARDA DE AUTENTICAÇÃO ---
+            // GUARDA DE AUTENTICAÇÃO
             supabaseClient.auth.onAuthStateChange((_event, session) => {
                 if (!session) {
                     window.location.href = 'login.html';
                 } else {
                     fetchSettings();
                     fetchProducts();
-                    fetchPosts();
+                    fetchTestimonials();
                 }
             });
 
-            // --- LÓGICA DE LOGOUT ---
+            // LÓGICA DE LOGOUT
             logoutButton.addEventListener('click', async () => await supabaseClient.auth.signOut());
 
-            // --- LÓGICA DE CONFIGURAÇÕES ---
+            // LÓGICA DE CONFIGURAÇÕES
             async function fetchSettings() {
                 const { data, error } = await supabaseClient.from('settings').select('value').eq('setting_name', 'featured_mode').single();
                 if (data) {
                     document.querySelector(`input[name="featured-mode"][value="${data.value}"]`).checked = true;
-                } else {
-                    console.error("Erro ao buscar configurações:", error);
-                }
+                } else { console.error("Erro ao buscar configurações:", error); }
             }
             featuredModeRadios.forEach(radio => {
                 radio.addEventListener('change', async (event) => {
@@ -164,28 +140,16 @@
             async function fetchProducts() {
                 const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
                 if (error) { console.error('Erro ao buscar produtos:', error); return; }
-
                 productsList.innerHTML = '';
                 data.forEach(product => {
-                    const productElement = document.createElement('div');
-                    productElement.classList.add('item');
-                    if (product.is_featured) { productElement.classList.add('featured'); }
+                    const el = document.createElement('div');
+                    el.classList.add('item');
+                    if (product.is_featured) { el.classList.add('featured'); }
                     const thumbnailUrl = (product.image_urls && product.image_urls.length > 0) ? product.image_urls[0] : 'https://via.placeholder.com/80';
-                    productElement.innerHTML = `
-                        <img src="${thumbnailUrl}" alt="${product.title}">
-                        <div class="item-info">
-                            <h4>${product.title} ${product.is_featured ? '⭐' : ''}</h4>
-                            <p>${product.description ? product.description.substring(0, 50) : ''}...</p>
-                        </div>
-                        <div class="item-actions">
-                            <button class="feature-btn" data-id="${product.id}" data-featured="${product.is_featured}">${product.is_featured ? 'Remover Destaque' : 'Tornar Destaque'}</button>
-                            <button class="edit-btn product-edit-btn" data-id="${product.id}">Editar</button>
-                            <button class="delete-btn product-delete-btn" data-id="${product.id}">Excluir</button>
-                        </div>`;
-                    productsList.appendChild(productElement);
+                    el.innerHTML = `<img src="${thumbnailUrl}" alt="${product.title}"><div class="item-info"><h4>${product.title} ${product.is_featured ? '⭐' : ''}</h4><p>${product.description ? product.description.substring(0, 50) : ''}...</p></div><div class="item-actions"><button class="feature-btn" data-id="${product.id}" data-featured="${product.is_featured}">${product.is_featured ? 'Remover Destaque' : 'Tornar Destaque'}</button><button class="edit-btn product-edit-btn" data-id="${product.id}">Editar</button><button class="delete-btn product-delete-btn" data-id="${product.id}">Excluir</button></div>`;
+                    productsList.appendChild(el);
                 });
             }
-            
             productForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 const title = document.getElementById('product-title').value;
@@ -193,11 +157,9 @@
                 const description = document.getElementById('product-description').value;
                 const shopeeLink = document.getElementById('product-shopee-link').value;
                 const imageFiles = document.getElementById('product-image').files;
-                
                 productFormMessage.textContent = 'Enviando...';
                 const categories = categoryInput.split(',').map(cat => cat.trim()).filter(Boolean);
                 let imageUrls = [];
-
                 if (imageFiles.length > 0) {
                     for (const file of imageFiles) {
                         const fileName = `${Date.now()}-${file.name}`;
@@ -207,9 +169,7 @@
                         imageUrls.push(urlData.publicUrl);
                     }
                 }
-
                 const productData = { title, category: categories, description, shopee_link: shopeeLink };
-
                 if (editingProductId) {
                     if (imageUrls.length > 0) { productData.image_urls = imageUrls; }
                     const { error } = await supabaseClient.from('products').update(productData).eq('id', editingProductId);
@@ -218,32 +178,27 @@
                     if (imageUrls.length === 0) { productFormMessage.textContent = 'Pelo menos uma imagem é obrigatória.'; return; }
                     productData.image_urls = imageUrls;
                     const { error } = await supabaseClient.from('products').insert([productData]);
-                    if (error) { productFormMessage.textContent = 'Erro ao salvar produto.'; } else { productFormMessage.textContent = 'Produto salvo!'; }
+                    if (error) { productFormMessage.textContent = 'Erro ao salvar produto.'; console.error(error); } else { productFormMessage.textContent = 'Produto salvo!'; }
                 }
-                
                 productForm.reset();
                 fetchProducts();
                 setTimeout(() => productFormMessage.textContent = '', 3000);
             });
-
             productsList.addEventListener('click', async (event) => {
                 const target = event.target;
                 const productId = target.dataset.id;
                 if (!productId) return;
-
                 if (target.classList.contains('feature-btn')) {
                     const isCurrentlyFeatured = target.dataset.featured === 'true';
                     await supabaseClient.from('products').update({ is_featured: !isCurrentlyFeatured }).eq('id', productId);
                     fetchProducts();
                 }
-
                 if (target.classList.contains('product-delete-btn')) {
                     if (confirm('Tem certeza que deseja excluir este produto?')) {
                         await supabaseClient.from('products').delete().eq('id', productId);
                         fetchProducts();
                     }
                 }
-
                 if (target.classList.contains('product-edit-btn')) {
                     const { data } = await supabaseClient.from('products').select('*').eq('id', productId).single();
                     document.getElementById('product-title').value = data.title;
@@ -257,7 +212,6 @@
                     productForm.scrollIntoView({ behavior: 'smooth' });
                 }
             });
-            
             function resetProductForm() {
                 productForm.reset();
                 productFormTitle.textContent = 'Adicionar Novo Produto';
@@ -266,92 +220,61 @@
                 editingProductId = null;
             }
 
-            // --- LÓGICA DO BLOG ---
-            async function fetchPosts() {
-                const { data, error } = await supabaseClient.from('posts').select('*').order('created_at', { ascending: false });
-                if (error) { console.error('Erro ao buscar posts:', error); return; }
-
-                postsList.innerHTML = '';
-                data.forEach(post => {
-                    const postElement = document.createElement('div');
-                    postElement.classList.add('item');
-                    postElement.innerHTML = `
-                        <img src="${post.image_url || 'https://via.placeholder.com/80'}" alt="${post.title}">
-                        <div class="item-info">
-                            <h4>${post.title}</h4>
-                            <p>Autor: ${post.author || 'N/A'}</p>
-                        </div>
-                        <div class="item-actions">
-                            <button class="edit-btn post-edit-btn" data-id="${post.id}">Editar</button>
-                            <button class="delete-btn post-delete-btn" data-id="${post.id}">Excluir</button>
-                        </div>`;
-                    postsList.appendChild(postElement);
+   
+            // --- LÓGICA DE DEPOIMENTOS ---
+            async function fetchTestimonials() {
+                const { data, error } = await supabaseClient.from('testimonials').select('*').order('created_at', { ascending: false });
+                if (error) { console.error('Erro ao buscar depoimentos:', error); return; }
+                testimonialsList.innerHTML = '';
+                data.forEach(testimonial => {
+                    const el = document.createElement('div');
+                    el.classList.add('item');
+                    el.innerHTML = `<div class="item-info"><h4>${testimonial.customer_name}</h4><p>"${testimonial.testimonial_text.substring(0, 80)}..."</p></div><div class="item-actions"><button class="edit-btn testimonial-edit-btn" data-id="${testimonial.id}">Editar</button><button class="delete-btn testimonial-delete-btn" data-id="${testimonial.id}">Excluir</button></div>`;
+                    testimonialsList.appendChild(el);
                 });
             }
-
-            postForm.addEventListener('submit', async (event) => {
+            testimonialForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
-                const title = document.getElementById('post-title').value;
-                const author = document.getElementById('post-author').value;
-                const content = document.getElementById('post-content').value;
-                const imageFile = document.getElementById('post-image').files[0];
-
-                postFormMessage.textContent = 'Salvando...';
-                let imageUrl = null;
-
-                if (imageFile) {
-                    const fileName = `${Date.now()}-${imageFile.name}`;
-                    const { error: uploadError } = await supabaseClient.storage.from('blog-images').upload(fileName, imageFile);
-                    if (uploadError) { postFormMessage.textContent = 'Erro no upload da imagem.'; return; }
-                    const { data: urlData } = supabaseClient.storage.from('blog-images').getPublicUrl(fileName);
-                    imageUrl = urlData.publicUrl;
-                }
-
-                const postData = { title, author, content };
-                
-                if (editingPostId) {
-                    if (imageUrl) { postData.image_url = imageUrl; }
-                    const { error } = await supabaseClient.from('posts').update(postData).eq('id', editingPostId);
-                    if (error) { postFormMessage.textContent = 'Erro ao atualizar o post.'; } else { postFormMessage.textContent = 'Post atualizado!'; resetPostForm(); }
+                const customer_name = document.getElementById('customer-name').value;
+                const testimonial_text = document.getElementById('testimonial-text').value;
+                testimonialFormMessage.textContent = 'Salvando...';
+                const testimonialData = { customer_name, testimonial_text };
+                if (editingTestimonialId) {
+                    const { error } = await supabaseClient.from('testimonials').update(testimonialData).eq('id', editingTestimonialId);
+                    if (error) { testimonialFormMessage.textContent = 'Erro ao atualizar.'; } else { testimonialFormMessage.textContent = 'Atualizado!'; resetTestimonialForm(); }
                 } else {
-                    if (imageUrl) { postData.image_url = imageUrl; }
-                    const { error } = await supabaseClient.from('posts').insert([postData]);
-                    if (error) { postFormMessage.textContent = 'Erro ao salvar o post.'; } else { postFormMessage.textContent = 'Post salvo!'; }
+                    const { error } = await supabaseClient.from('testimonials').insert([testimonialData]);
+                    if (error) { testimonialFormMessage.textContent = 'Erro ao salvar.'; } else { testimonialFormMessage.textContent = 'Salvo com sucesso!'; }
                 }
-                postForm.reset();
-                fetchPosts();
-                setTimeout(() => postFormMessage.textContent = '', 3000);
+                testimonialForm.reset();
+                fetchTestimonials();
+                setTimeout(() => testimonialFormMessage.textContent = '', 3000);
             });
-
-            postsList.addEventListener('click', async (event) => {
+            testimonialsList.addEventListener('click', async (event) => {
                 const target = event.target;
-                const postId = target.dataset.id;
-                if (!postId) return;
-
-                if (target.classList.contains('post-delete-btn')) {
-                    if (confirm('Tem certeza que deseja excluir este post?')) {
-                        await supabaseClient.from('posts').delete().eq('id', postId);
-                        fetchPosts();
+                const testimonialId = target.dataset.id;
+                if (!testimonialId) return;
+                if (target.classList.contains('testimonial-delete-btn')) {
+                    if (confirm('Tem certeza que deseja excluir este depoimento?')) {
+                        await supabaseClient.from('testimonials').delete().eq('id', testimonialId);
+                        fetchTestimonials();
                     }
                 }
-
-                if (target.classList.contains('post-edit-btn')) {
-                    const { data } = await supabaseClient.from('posts').select('*').eq('id', postId).single();
-                    document.getElementById('post-title').value = data.title;
-                    document.getElementById('post-author').value = data.author;
-                    document.getElementById('post-content').value = data.content;
-                    postFormTitle.textContent = 'Editar Post';
-                    postForm.querySelector('button').textContent = 'Atualizar Post';
-                    editingPostId = data.id;
-                    postForm.scrollIntoView({ behavior: 'smooth' });
+                if (target.classList.contains('testimonial-edit-btn')) {
+                    const { data } = await supabaseClient.from('testimonials').select('*').eq('id', testimonialId).single();
+                    document.getElementById('customer-name').value = data.customer_name;
+                    document.getElementById('testimonial-text').value = data.testimonial_text;
+                    testimonialFormTitle.textContent = 'Editar Depoimento';
+                    testimonialForm.querySelector('button').textContent = 'Atualizar Depoimento';
+                    editingTestimonialId = data.id;
+                    testimonialForm.scrollIntoView({ behavior: 'smooth' });
                 }
             });
-
-            function resetPostForm() {
-                postForm.reset();
-                postFormTitle.textContent = 'Adicionar Novo Post';
-                postForm.querySelector('button').textContent = 'Salvar Post';
-                editingPostId = null;
+            function resetTestimonialForm() {
+                testimonialForm.reset();
+                testimonialFormTitle.textContent = 'Adicionar Novo Depoimento';
+                testimonialForm.querySelector('button').textContent = 'Salvar Depoimento';
+                editingTestimonialId = null;
             }
         });
     </script>
