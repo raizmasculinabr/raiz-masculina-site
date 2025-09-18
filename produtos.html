@@ -143,8 +143,7 @@
             const { data, error } = await supabaseClient.from('products').select('*').order('created_at', { ascending: false });
             if (error) { grid.innerHTML = '<p>Erro ao carregar os produtos.</p>'; console.error(error); return; }
             allProductsData = data;
-            
-            const predefinedFilters = ['Acessórios', 'Eletrônicos', 'Ferramentas', 'Moda', 'Relógios', 'Infantil', 'Nome', 'Roupas'];
+            const predefinedFilters = ['Acessórios', 'Eletrônicos', 'Ferramentas', 'Relógios', 'Roupas', 'Moto','Vitaminas', 'Mochilas', 'Facas', 'Garrafas'];
             const activeCategories = new Set();
             data.forEach(p => {
                 if (p.category) { p.category.forEach(cat => activeCategories.add(cat.trim().toLowerCase())); }
